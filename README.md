@@ -76,7 +76,7 @@ The skill will guide you through each stage with confirmation checkpoints.
 | **Runtime** | Bun, Docker |
 | **API** | [OpenClaw](https://github.com/openclaw/openclaw) subscription |
 
-*Author's setup — yours may differ.*
+> Author's setup — yours may differ.
 
 ## Ecosystem
 
