@@ -65,6 +65,27 @@ The skill will guide you through each stage with confirmation checkpoints.
 | Nassim Taleb | Anti-Fragility + Risk | Rich (books, X) |
 | Ray Dalio | Principles-Based Decisions | Good (books, LinkedIn) |
 
+## Author's Setup
+
+> 作者的开发环境，仅供参考，你可以用自己喜欢的工具替代
+
+| Item | Setup |
+|------|-------|
+| **Hardware** | MacBook Air M4, 16GB RAM |
+| **Models** | Claude Opus 4.6 (primary), Gemini Pro 3 (secondary), MiniMax M2.5 (scheduled tasks) |
+| **Runtime** | Bun, Docker |
+| **API** | [OpenClaw](https://github.com/openclaw/openclaw) subscription |
+
+*Author's setup — yours may differ.*
+
+## Ecosystem
+
+> 这些项目配合使用效果更好
+
+| Project | What It Does |
+|---------|-------------|
+| [content-alchemy](https://github.com/AliceLJY/content-alchemy) | 7-stage content pipeline — use this clone's persona in Stage 5 for personalized writing |
+
 ## Acknowledgments
 
 > Inspired by [@MinLiBuilds](https://x.com/MinLiBuilds)'s [zero-code Naval digital clone tutorial](https://x.com/MinLiBuilds/status/2023910591283474722). The method of using Deep Research for data mapping, NotebookLM as a RAG engine, and Gemini Gem for personality injection was pioneered in that thread.
@@ -73,13 +94,11 @@ This skill adapts and extends that methodology into a reusable, semi-automated C
 
 ## Author
 
-Built by **小试AI** ([@AliceLJY](https://github.com/AliceLJY)) · WeChat Official Account: **我的AI小木屋**
+Built by **小试AI** ([@AliceLJY](https://github.com/AliceLJY)) · WeChat: **我的AI小木屋**
 
 > 医学出身，文化口工作，AI 野路子。公众号四大板块：AI实操手账 · AI踩坑实录 · AI照见众生 · AI随心分享
 
 Four content pillars: **Hands-on AI** · **AI Pitfall Diaries** · **AI & Humanity** · **AI Gallery**
-
-Open-source byproducts: [content-alchemy](https://github.com/AliceLJY/content-alchemy) · [openclaw-worker](https://github.com/AliceLJY/openclaw-worker) · [openclaw-cc-pipeline](https://github.com/AliceLJY/openclaw-cc-pipeline) · [openclaw-content-alchemy](https://github.com/AliceLJY/openclaw-content-alchemy) · [digital-clone-skill](https://github.com/AliceLJY/digital-clone-skill)
 
 <img src="./assets/wechat_qr.jpg" width="200" alt="WeChat QR Code">
 
