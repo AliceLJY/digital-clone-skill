@@ -87,8 +87,12 @@ The skill will guide you through each stage with confirmation checkpoints.
 | [content-alchemy](https://github.com/AliceLJY/content-alchemy) | 5-stage content pipeline (v5.0) — use this clone's persona in Stage 5 for personalized writing |
 | [content-publisher](https://github.com/AliceLJY/content-publisher) | Image generation, layout formatting, and WeChat API publishing |
 | [openclaw-worker](https://github.com/AliceLJY/openclaw-worker) | Task API + Worker for bot-driven automation |
+| [openclaw-content-alchemy](https://github.com/AliceLJY/openclaw-content-alchemy) | Bot-native content pipeline (OpenClaw plugin) |
+| [openclaw-cli-pipeline](https://github.com/AliceLJY/openclaw-cli-pipeline) | Multi-turn CC orchestration CLI |
 | [openclaw-cli-bridge](https://github.com/AliceLJY/openclaw-cli-bridge) | Discord → CC/Codex/Gemini bridge |
 | [local-memory](https://github.com/AliceLJY/local-memory) | Hybrid search over AI conversation transcripts |
+| [cc-shell](https://github.com/AliceLJY/cc-shell) | Lightweight Claude Code chat UI |
+| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Telegram AI bridge (Claude + Codex backends) |
 
 ## Acknowledgments
 
