@@ -93,11 +93,12 @@ Ask the user:
 **Step 1.2: Data Map**
 
 **Self Mode:**
-1. Scan local corpus assets automatically:
-   - `~/.claude/projects/-Users-anxianjingya/*.jsonl` — CC transcripts (count files, estimate volume)
-   - `~/.claude/projects/-Users-anxianjingya/memory/writing-persona.md` — existing personality profile
-   - `~/.claude/projects/-Users-anxianjingya/memory/material-goldmine.md` — curated quotes
-   - `~/Documents/memory-archive/material-library.md` — full material library
+1. Scan local corpus assets automatically (detect paths dynamically):
+   - `~/.claude/projects/*/` — find the active Claude project directory (look for `.jsonl` transcript files)
+   - `<project-dir>/*.jsonl` — CC transcripts (count files, estimate volume)
+   - `<project-dir>/memory/writing-persona.md` — existing personality profile (if exists)
+   - `<project-dir>/memory/material-goldmine.md` — curated quotes (if exists)
+   - `~/Documents/memory-archive/material-library.md` — full material library (if exists)
    - Any published articles the user provides
 2. Output a data inventory table: source → file count → estimated tokens → priority
 
@@ -173,13 +174,17 @@ Ask the user:
 
 > Clean, deduplicate, and assess corpus quality.
 
-**Step 3.1: Format Unification**
+**Step 3.1: Format Unification & Privacy Sanitization**
 - Scan all files in `raw/`
 - Convert to clean Markdown/TXT:
   - Strip HTML tags, ads, navigation elements, copyright notices
   - Remove duplicate content (same article from multiple sources)
   - Normalize encoding (UTF-8)
   - Preserve original structure (headings, lists, quotes)
+- **Sanitize PII/sensitive data** before proceeding:
+  - Scan for and redact: email addresses, phone numbers, physical addresses, API keys/tokens, passwords
+  - Replace with placeholders (e.g., `[EMAIL_REDACTED]`, `[TOKEN_REDACTED]`)
+  - Flag any borderline cases for user review
 - Output cleaned files to `refined/`
 
 **Step 3.2: Quality Assessment**
