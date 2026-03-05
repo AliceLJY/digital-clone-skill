@@ -90,7 +90,7 @@ The skill will guide you through each stage with confirmation checkpoints.
 | [openclaw-cli-bridge](https://github.com/AliceLJY/openclaw-cli-bridge) | Discord → CC/Codex/Gemini bridge |
 | [local-memory](https://github.com/AliceLJY/local-memory) | Hybrid search over AI conversation transcripts |
 | [cc-shell](https://github.com/AliceLJY/cc-shell) | Lightweight Claude Code chat UI |
-| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Telegram AI bridge (tri-backend: Claude + Codex + Gemini) |
+| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | 3 Telegram bots for Claude / Codex / Gemini via SDK |
 | [telegram-cli-bridge](https://github.com/AliceLJY/telegram-cli-bridge) | Telegram CLI bridge (Gemini CLI path) |
 
 ## Acknowledgments
