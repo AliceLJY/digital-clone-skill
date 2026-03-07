@@ -1,0 +1,27 @@
+{
+  "name": "digital-clone",
+  "version": "2.0.0",
+  "description": "Corpus-driven digital clone toolkit — collect, refine, and assess persona data from AI conversations and writings",
+  "type": "module",
+  "bin": {
+    "clone": "src/cli.ts"
+  },
+  "scripts": {
+    "ingest": "bun run src/cli.ts ingest",
+    "refine": "bun run src/cli.ts refine",
+    "quality": "bun run src/cli.ts quality",
+    "stats": "bun run src/cli.ts stats",
+    "mcp": "bun run src/mcp-server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "commander": "^12.0.0",
+    "zod": "^3.25.76"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AliceLJY/digital-clone-skill.git"
+  },
+  "homepage": "https://github.com/AliceLJY/digital-clone-skill",
+  "license": "MIT"
+}

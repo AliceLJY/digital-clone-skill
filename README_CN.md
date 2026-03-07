@@ -1,118 +1,97 @@
-# Claude Code 数字分身 Skill
+# Digital Clone 数字分身工具
 
 [English](README.md) | **简体中文**
 
-## 项目定位
+> 语料驱动的数字分身工具 — 从 AI 对话和写作中采集、清洗、评估人格数据。
 
-这个仓库是一个 Claude Code skill，不是独立应用。
+Digital Clone 把 CLI/MCP 数据管道和 Claude Code Skill 结合在一起。工具负责机械性工作（扫描、清洗、去重、PII 脱敏、质量评估），Skill 负责 AI 擅长的事（人格提取、System Prompt 生成、验证评分）。
 
-它本质上是一个由语料驱动、需要人工参与确认的数字分身工作流，不是安装后就会自动跑完的程序仓，也不是一键上线的托管服务。
+## 总览
 
-这个 Skill 目前只在我自己的 Claude Code 工作流里实测通过。
+| 层 | 做什么 |
+|----|--------|
+| Ingest | 扫描 Claude Code、Codex、Gemini CLI 对话 + markdown + 文章 |
+| Refine | 去重、PII 脱敏、格式统一 |
+| Quality | 体量、纯度、覆盖面、时效性评估 |
+| Soul Forging | 人格提取 + System Prompt 生成（Skill） |
+| Verify | 测试用例模板 + 评分标准 |
+| Deploy | 平台部署指南 |
 
-## 这个 Skill 做什么
+## 两种模式
 
-这个仓库的核心就是 [`SKILL.md`](./SKILL.md)。它定义了一个 6 阶段工作流：
+- **Self Mode**：从本地 AI 对话和写作克隆自己
+- **Mentor Mode**：从手动采集的语料克隆名人
 
-1. 目标画像
-2. 语料搜集
-3. 语料清洗
-4. 灵魂锻造
-5. 验证测试
-6. 部署上线
-
-它支持两种模式：
-
-- `Self Mode`：基于你自己的 Claude Code 对话、写作文件和本地记忆材料来构建分身
-- `Mentor Mode`：由 AI 生成采集策略，再由用户自己去下载、整理和复核某位公开人物的语料
-
-每个阶段都需要用户确认后才能继续。最终产物是清洗后的语料包、persona、system prompt 和部署说明，不是仓库自己负责托管上线的服务。
-
-## 安装
-
-按 Claude Code skill 的方式安装：
+## 快速开始
 
 ```bash
-mkdir -p ~/.claude/skills/digital-clone
-cp SKILL.md ~/.claude/skills/digital-clone/
+git clone https://github.com/AliceLJY/digital-clone-skill.git
+cd digital-clone-skill
+npm install
+
+# 初始化工作区
+bun run src/cli.ts init --target "你的名字" --mode self
+
+# 扫描 AI 对话
+bun run src/cli.ts ingest --source all
+
+# 清洗去重
+bun run src/cli.ts refine
+
+# 查看语料质量
+bun run src/cli.ts quality
 ```
 
-## 使用方式
+然后在 Claude Code 中调用 Skill 进行 Soul Forging（Stage 4）。
 
-启动 Claude Code 会话后，可以这样调用：
+## CLI 命令
 
-```text
-帮我克隆自己，用我的文章和对话记录
-帮我克隆纳瓦尔做数字导师
-我已经收集好了 Paul Graham 的语料，在 ~/pg-corpus/ 里
+| 命令 | 说明 |
+|------|------|
+| `clone init` | 初始化工作区和配置 |
+| `clone ingest --source <src>` | 扫描语料（cc, codex, gemini, memory, articles, all） |
+| `clone import <path>` | 导入外部文件（Mentor Mode） |
+| `clone refine` | 清洗、去重、脱敏 |
+| `clone quality` | 生成质量报告 |
+| `clone stats` | 显示语料统计 |
+| `clone verify-template` | 生成测试用例模板 |
+| `clone deploy-guide --platform <p>` | 生成部署指南 |
+
+## MCP 工具
+
+| 工具 | 说明 |
+|------|------|
+| `clone_ingest` | 扫描和采集语料 |
+| `clone_refine` | 清洗和去重 |
+| `clone_quality` | 评估语料质量 |
+| `clone_stats` | 显示统计 |
+| `clone_read_corpus` | 读取清洗后的语料片段（供 AI 做人格提取） |
+
+## 工作流
+
+```
+Stage 1: 目标画像 ────── Skill（对话式）
+Stage 2: 语料搜集 ────── CLI: clone ingest / clone import
+Stage 3: 语料清洗 ────── CLI: clone refine + clone quality
+Stage 4: 灵魂锻造 ────── Skill（读取清洗后语料，提取人格）
+Stage 5: 验证测试 ────── CLI: clone verify-template + Skill（评分）
+Stage 6: 部署上线 ────── CLI: clone deploy-guide + Skill（个性化建议）
 ```
 
-## 实测环境
+## 致谢
 
-- macOS
-- Claude Code
-- 本地语料文件
-- 可选的 NotebookLM / Gemini 工作流用于部署
-
-## 兼容性说明
-
-- 这个 Skill 目前只在我自己的 Claude Code 工作流里实测通过。
-- 它默认你有本地语料、可用的 Claude Code 技能环境，以及愿意进行人工确认。
-- 部分路径假设基于我自己的目录结构，换机器或换系统通常需要自己调整。
-- 目前不保证在 Linux 或 Windows 上无需修改即可使用。
-- NotebookLM、Gemini Gem、CC Bot 或其他 LLM 平台的部署细节会随时间变化。
-- 这不是一键生成分身的产品，人工参与和人工审核本来就是流程的一部分。
-
-## 前置条件
-
-- Claude Code
-- 已安装到 `~/.claude/skills/` 下的本地 skill
-- 足够支撑人格抽取的语料材料
-- 愿意进行手动采集、人工审核和阶段确认
-
-## 本地假设
-
-- 当前活跃 Claude 项目可能会从 `~/.claude/projects/*/` 扫描
-- Self Mode 可能读取 `<project-dir>/*.jsonl` 下的对话记录
-- 可选复用 `<project-dir>/memory/writing-persona.md`
-- 可选复用 `<project-dir>/memory/material-goldmine.md`
-- 可选读取 `~/Documents/memory-archive/material-library.md`
-- 所有工作流输出默认写入 `./clone-workspace/`
-
-## 输出产物
-
-工作流默认会在 `./clone-workspace/` 下生成这些内容：
-
-- `profile.md`
-- `quality-report.md`
-- `persona.md`
-- `system-prompt.md`
-- `test-cases.md`
-- `deploy-guide.md`
-- `raw/`
-- `refined/`
-
-最终交付的是清洗后的语料包、人格画像、系统提示词、验证材料和第三方平台部署说明，不是“一键上线服务”。
-
-## 已知限制
-
-- 不是一键生成分身的工具
-- 效果高度依赖语料质量
-- 公开人物语料采集仍然需要人工完成
-- 最终部署依赖第三方平台
-- Self Mode 默认依赖本地 Claude Code 对话和记忆文件约定
-- Mentor Mode 不会替用户自动下载完整公开语料
+| 来源 | 贡献 |
+|------|------|
+| Claude Code | 基础架构、CLI、MCP、解析器 |
+| [RecallNest](https://github.com/AliceLJY/recallnest) | CC/Codex/Gemini 对话解析器架构 |
+| [@MinLiBuilds](https://x.com/MinLiBuilds) | Naval 克隆教程 — 最初的灵感来源 |
 
 ## 作者
 
 作者：**小试AI**（[@AliceLJY](https://github.com/AliceLJY)）
 
-## 公众号二维码
-
 公众号：**我的AI小木屋**
-
-<img src="./assets/wechat_qr.jpg" width="200" alt="公众号二维码">
 
 ## License
 
-当前仓库里还没有单独的 `LICENSE` 文件。
+MIT
