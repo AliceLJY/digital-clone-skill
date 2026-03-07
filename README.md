@@ -1,30 +1,36 @@
 # Digital Clone Skill for Claude Code
 
-A 6-stage semi-automated workflow to create high-fidelity digital clones (mentors/personas) from corpus data.
+**English** | [简体中文](README_CN.md)
 
-> **Corpus-driven, platform-agnostic, human-in-the-loop.**
->
-> 用语料驱动的方式，构建任何人的数字分身。支持克隆自己，也支持克隆名人导师。
+## Project Positioning
 
-## How It Works
+This repository is a Claude Code skill, not a standalone application.
 
-| Stage | Name | What Happens |
-|-------|------|-------------|
-| 1 | **Target Profiling** | Identify clone target, map out data sources |
-| 2 | **Data Hunting** | Collect raw corpus (auto for self, guided for public figures) |
-| 3 | **Data Refining** | Clean, deduplicate, assess corpus quality |
-| 4 | **Soul Forging** | Extract personality + generate System Prompt |
-| 5 | **Verification** | Test with trap questions, iterate until pass |
-| 6 | **Deployment** | Deploy to NotebookLM + Gemini Gem / CC Bot / any LLM |
+It is a corpus-driven, human-in-the-loop workflow for building a digital clone from local or manually collected source material. It is not a one-click product, not a self-hosted service, and not a repository that automatically runs end to end after installation.
 
-## Two Modes
+This skill is only tested in my own Claude Code workflow.
 
-- **Self Mode**: Clone yourself using your own writing, transcripts, and published content
-- **Mentor Mode**: Clone a public figure (Naval, Paul Graham, Munger, etc.) by collecting their public corpus
+## What This Skill Does
 
-## Installation
+The core of this repository is [`SKILL.md`](./SKILL.md). It defines a 6-stage workflow:
 
-Copy `SKILL.md` to your Claude Code skills directory:
+1. Target Profiling
+2. Data Hunting
+3. Data Refining
+4. Soul Forging
+5. Verification
+6. Deployment
+
+It supports two modes:
+
+- `Self Mode`: build a clone from your own Claude Code transcripts, writing files, and local memory materials
+- `Mentor Mode`: generate collection strategies for a public figure, then let the user manually download, organize, and review the corpus
+
+Every stage requires user confirmation before the workflow proceeds. The final output is a cleaned corpus package plus persona and deployment materials, not an automatically hosted clone service.
+
+## Install
+
+Install it as a Claude Code skill:
 
 ```bash
 mkdir -p ~/.claude/skills/digital-clone
@@ -33,82 +39,80 @@ cp SKILL.md ~/.claude/skills/digital-clone/
 
 ## Usage
 
-Start a new Claude Code session and say:
+Start a Claude Code session and invoke the skill with requests such as:
 
-```
-# Clone yourself
+```text
 帮我克隆自己，用我的文章和对话记录
-
-# Clone a public figure
 帮我克隆纳瓦尔做数字导师
-
-# Clone with existing corpus
 我已经收集好了 Paul Graham 的语料，在 ~/pg-corpus/ 里
 ```
 
-The skill will guide you through each stage with confirmation checkpoints.
+## Tested Environment
 
-## Key Principles
+- macOS
+- Claude Code
+- Local corpus files
+- Optional NotebookLM / Gemini workflow for deployment
 
-- **First-hand corpus > second-hand summaries**: Raw voice, original writing, real Q&A
-- **Data determines the ceiling**: More high-quality corpus = better clone
-- **Platform-agnostic output**: Produces System Prompt + cleaned corpus, deployable anywhere
-- **Context-aware tone**: The clone knows when to be casual and when to be serious
+## Compatibility Notes
 
-## Recommended Mentor Targets
+- This skill is only tested in my own Claude Code workflow.
+- It assumes access to local corpus files and a Claude Code skill environment.
+- Some path conventions are based on my own machine and may require adjustment on other setups.
+- It is not guaranteed to work unchanged on Linux or Windows.
+- Deployment targets such as NotebookLM, Gemini Gem, CC Bot, or other LLM platforms may change over time.
+- This is not a one-click product. Human review and manual collection are part of the workflow.
 
-| Person | Domain | Corpus Richness |
-|--------|--------|----------------|
-| Naval Ravikant | Wealth + Happiness | Rich (blog, X, podcasts) |
-| Paul Graham | Startups + Thinking | Rich (essays, X, HN) |
-| Charlie Munger | Multi-disciplinary Thinking | Good (speeches, books) |
-| Nassim Taleb | Anti-Fragility + Risk | Rich (books, X) |
-| Ray Dalio | Principles-Based Decisions | Good (books, LinkedIn) |
+## Prerequisites
 
-## Author's Setup
+- Claude Code
+- Local skill installation under `~/.claude/skills/`
+- Enough corpus material to support personality extraction
+- Willingness to do manual collection, review, and approval at each stage
 
-> 作者的开发环境，仅供参考，你可以用自己喜欢的工具替代
+## Local Assumptions
 
-| Item | Setup |
-|------|-------|
-| **Hardware** | MacBook Air M4, 16GB RAM |
-| **Models** | Claude Opus 4.6 (primary), Gemini Pro 3 (secondary), MiniMax M2.5 (scheduled tasks) |
-| **Runtime** | Bun, Docker |
-| **API** | [OpenClaw](https://github.com/openclaw/openclaw) subscription |
+- The active Claude project may be scanned from `~/.claude/projects/*/`
+- Self Mode may look for transcript files under `<project-dir>/*.jsonl`
+- Optional files may be reused from `<project-dir>/memory/writing-persona.md`
+- Optional files may be reused from `<project-dir>/memory/material-goldmine.md`
+- An optional archive file may be read from `~/Documents/memory-archive/material-library.md`
+- Workflow outputs are written to `./clone-workspace/`
 
-> Author's setup — yours may differ.
+## Outputs
 
-## Ecosystem
+The workflow is designed to produce these files under `./clone-workspace/`:
 
-> 这些项目配合使用效果更好
+- `profile.md`
+- `quality-report.md`
+- `persona.md`
+- `system-prompt.md`
+- `test-cases.md`
+- `deploy-guide.md`
+- `raw/`
+- `refined/`
 
-| Project | What It Does |
-|---------|-------------|
-| [content-alchemy](https://github.com/AliceLJY/content-alchemy) | 5-stage content pipeline (v5.0) — use this clone's persona in Stage 5 for personalized writing |
-| [content-publisher](https://github.com/AliceLJY/content-publisher) | Image generation, layout formatting, and WeChat API publishing |
-| [openclaw-worker](https://github.com/AliceLJY/openclaw-worker) | Task API + Worker for bot-driven automation |
-| [openclaw-cli-bridge](https://github.com/AliceLJY/openclaw-cli-bridge) | Discord → CC/Codex/Gemini bridge |
-| [local-memory](https://github.com/AliceLJY/local-memory) | Hybrid search over AI conversation transcripts |
-| [cc-shell](https://github.com/AliceLJY/cc-shell) | Lightweight Claude Code chat UI |
-| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | 3 Telegram bots for Claude / Codex / Gemini via SDK |
-| [telegram-cli-bridge](https://github.com/AliceLJY/telegram-cli-bridge) | Telegram CLI bridge (Gemini CLI path) |
+The final deliverable is a cleaned corpus package plus persona, system prompt, verification materials, and a deployment guide for third-party platforms.
 
-## Acknowledgments
+## Known Limits
 
-> Inspired by [@MinLiBuilds](https://x.com/MinLiBuilds)'s [zero-code Naval digital clone tutorial](https://x.com/MinLiBuilds/status/2023910591283474722). The method of using Deep Research for data mapping, NotebookLM as a RAG engine, and Gemini Gem for personality injection was pioneered in that thread.
-
-This skill adapts and extends that methodology into a reusable, semi-automated Claude Code workflow with Self/Mentor dual modes, corpus quality assessment, and structured verification testing.
+- Not a one-click clone generator
+- Quality depends heavily on corpus quality
+- Public figure collection still requires manual work
+- Final deployment depends on third-party platforms
+- Self Mode assumes local Claude Code transcript and memory file conventions
+- Mentor Mode does not auto-download the full public corpus for the user
 
 ## Author
 
-Built by **小试AI** ([@AliceLJY](https://github.com/AliceLJY)) · WeChat: **我的AI小木屋**
+Built by **小试AI** ([@AliceLJY](https://github.com/AliceLJY))
 
-> 医学出身，文化口工作，AI 野路子。公众号六大板块：AI实操手账 · AI踩坑实录 · AI照见众生 · AI冷眼旁观 · AI胡思乱想 · AI视觉笔记
+## WeChat Public Account
 
-Six content pillars: **Hands-on AI** · **AI Pitfall Diaries** · **AI & Humanity** · **AI Cold Eye** · **AI Musings** · **AI Visual Notes**
+WeChat public account: **我的AI小木屋**
 
 <img src="./assets/wechat_qr.jpg" width="200" alt="WeChat QR Code">
 
 ## License
 
-MIT
+This repository does not currently include a standalone `LICENSE` file.
