@@ -1,118 +1,134 @@
-# Digital Clone Skill for Claude Code
+# Digital Clone
 
 **English** | [简体中文](README_CN.md)
 
-## Project Positioning
+> Corpus-driven digital clone toolkit — collect, refine, and assess persona data from AI conversations and writings.
 
-This repository is a Claude Code skill, not a standalone application.
+Digital Clone combines a CLI/MCP data pipeline with a Claude Code Skill. The tools handle the mechanical work (scanning, cleaning, deduplication, PII sanitization, quality assessment). The Skill handles what AI does best (personality extraction, system prompt generation, verification).
 
-It is a corpus-driven, human-in-the-loop workflow for building a digital clone from local or manually collected source material. It is not a one-click product, not a self-hosted service, and not a repository that automatically runs end to end after installation.
+## At A Glance
 
-This skill is only tested in my own Claude Code workflow.
+| Layer | What it does |
+|-------|-------------|
+| Ingest | Scan Claude Code, Codex, Gemini CLI transcripts + markdown + articles |
+| Refine | Deduplicate, sanitize PII, normalize format |
+| Quality | Volume, purity, coverage, recency assessment |
+| Soul Forging | Personality extraction + System Prompt generation (Skill) |
+| Verify | Test case templates + scoring rubric |
+| Deploy | Platform-specific deployment guides |
 
-## What This Skill Does
+## Two Modes
 
-The core of this repository is [`SKILL.md`](./SKILL.md). It defines a 6-stage workflow:
+- **Self Mode**: clone yourself from local AI conversations and writings
+- **Mentor Mode**: clone a public figure from manually collected corpus
 
-1. Target Profiling
-2. Data Hunting
-3. Data Refining
-4. Soul Forging
-5. Verification
-6. Deployment
+## Quick Start
 
-It supports two modes:
+```bash
+git clone https://github.com/AliceLJY/digital-clone-skill.git
+cd digital-clone-skill
+npm install
 
-- `Self Mode`: build a clone from your own Claude Code transcripts, writing files, and local memory materials
-- `Mentor Mode`: generate collection strategies for a public figure, then let the user manually download, organize, and review the corpus
+# initialize workspace
+bun run src/cli.ts init --target "Your Name" --mode self
 
-Every stage requires user confirmation before the workflow proceeds. The final output is a cleaned corpus package plus persona and deployment materials, not an automatically hosted clone service.
+# scan your AI conversations
+bun run src/cli.ts ingest --source all
 
-## Install
+# clean and deduplicate
+bun run src/cli.ts refine
 
-Install it as a Claude Code skill:
+# check corpus quality
+bun run src/cli.ts quality
+```
+
+Then invoke the Skill in Claude Code for Soul Forging (Stage 4).
+
+## CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `clone init` | Initialize workspace and config |
+| `clone ingest --source <src>` | Scan corpus (cc, codex, gemini, memory, articles, all) |
+| `clone import <path>` | Import external files (Mentor Mode) |
+| `clone refine` | Clean, dedup, sanitize |
+| `clone quality` | Generate quality report |
+| `clone stats` | Show corpus statistics |
+| `clone verify-template` | Generate test case template |
+| `clone deploy-guide --platform <p>` | Generate deployment guide |
+
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `clone_ingest` | Scan and collect corpus |
+| `clone_refine` | Clean and deduplicate |
+| `clone_quality` | Assess corpus quality |
+| `clone_stats` | Show statistics |
+| `clone_read_corpus` | Read refined corpus slices (for AI personality extraction) |
+
+### MCP Setup (Claude Code)
+
+```json
+{
+  "mcpServers": {
+    "digital-clone": {
+      "command": "bun",
+      "args": ["run", "/path/to/digital-clone-skill/src/mcp-server.ts"],
+      "cwd": "/path/to/digital-clone-skill"
+    }
+  }
+}
+```
+
+## Skill Installation
+
+The Skill handles Stage 4 (Soul Forging) — personality extraction and System Prompt generation:
 
 ```bash
 mkdir -p ~/.claude/skills/digital-clone
 cp SKILL.md ~/.claude/skills/digital-clone/
 ```
 
-## Usage
+## Workflow
 
-Start a Claude Code session and invoke the skill with requests such as:
-
-```text
-帮我克隆自己，用我的文章和对话记录
-帮我克隆纳瓦尔做数字导师
-我已经收集好了 Paul Graham 的语料，在 ~/pg-corpus/ 里
+```
+Stage 1: Target Profiling ─── Skill (conversational)
+Stage 2: Data Hunting ─────── CLI: clone ingest / clone import
+Stage 3: Data Refining ────── CLI: clone refine + clone quality
+Stage 4: Soul Forging ─────── Skill (reads refined corpus, extracts personality)
+Stage 5: Verification ─────── CLI: clone verify-template + Skill (scoring)
+Stage 6: Deployment ────────── CLI: clone deploy-guide + Skill (customization)
 ```
 
-## Tested Environment
+## Architecture
 
-- macOS
-- Claude Code
-- Local corpus files
-- Optional NotebookLM / Gemini workflow for deployment
+| File | Role |
+|------|------|
+| `src/cli.ts` | CLI entry |
+| `src/mcp-server.ts` | MCP tools |
+| `src/parsers.ts` | Multi-source transcript parsing |
+| `src/ingest.ts` | Corpus collection pipeline |
+| `src/refine.ts` | Dedup + PII sanitize + normalize |
+| `src/quality.ts` | Quality assessment + report |
+| `src/templates.ts` | Verify + deploy template generation |
+| `src/config.ts` | Configuration management |
+| `SKILL.md` | Claude Code Skill (Soul Forging) |
 
-## Compatibility Notes
+## Credit
 
-- This skill is only tested in my own Claude Code workflow.
-- It assumes access to local corpus files and a Claude Code skill environment.
-- Some path conventions are based on my own machine and may require adjustment on other setups.
-- It is not guaranteed to work unchanged on Linux or Windows.
-- Deployment targets such as NotebookLM, Gemini Gem, CC Bot, or other LLM platforms may change over time.
-- This is not a one-click product. Human review and manual collection are part of the workflow.
-
-## Prerequisites
-
-- Claude Code
-- Local skill installation under `~/.claude/skills/`
-- Enough corpus material to support personality extraction
-- Willingness to do manual collection, review, and approval at each stage
-
-## Local Assumptions
-
-- The active Claude project may be scanned from `~/.claude/projects/*/`
-- Self Mode may look for transcript files under `<project-dir>/*.jsonl`
-- Optional files may be reused from `<project-dir>/memory/writing-persona.md`
-- Optional files may be reused from `<project-dir>/memory/material-goldmine.md`
-- An optional archive file may be read from `~/Documents/memory-archive/material-library.md`
-- Workflow outputs are written to `./clone-workspace/`
-
-## Outputs
-
-The workflow is designed to produce these files under `./clone-workspace/`:
-
-- `profile.md`
-- `quality-report.md`
-- `persona.md`
-- `system-prompt.md`
-- `test-cases.md`
-- `deploy-guide.md`
-- `raw/`
-- `refined/`
-
-The final deliverable is a cleaned corpus package plus persona, system prompt, verification materials, and a deployment guide for third-party platforms.
-
-## Known Limits
-
-- Not a one-click clone generator
-- Quality depends heavily on corpus quality
-- Public figure collection still requires manual work
-- Final deployment depends on third-party platforms
-- Self Mode assumes local Claude Code transcript and memory file conventions
-- Mentor Mode does not auto-download the full public corpus for the user
+| Source | Contribution |
+|--------|-------------|
+| Claude Code | Foundation, CLI, MCP server, parsers |
+| [RecallNest](https://github.com/AliceLJY/recallnest) | Parser architecture for CC/Codex/Gemini transcripts |
+| [@MinLiBuilds](https://x.com/MinLiBuilds) | Naval clone tutorial — original inspiration |
 
 ## Author
 
 Built by **小试AI** ([@AliceLJY](https://github.com/AliceLJY))
 
-## WeChat Public Account
-
 WeChat public account: **我的AI小木屋**
-
-<img src="./assets/wechat_qr.jpg" width="200" alt="WeChat QR Code">
 
 ## License
 
-This repository does not currently include a standalone `LICENSE` file.
+MIT
