@@ -179,6 +179,107 @@ program
     console.log(`Deploy guide: ${path}`);
   });
 
+// --- refresh ---
+program
+  .command("refresh")
+  .description("Incremental update: ingest new conversations + recallnest memories, refine, append to corpus")
+  .option("--source <source>", "Source to refresh: cc, codex, gemini, memory, all", "all")
+  .option("--days <n>", "Only include recallnest memories from last N days", "14")
+  .option("--skip-recallnest", "Skip recallnest memory export")
+  .action((opts) => {
+    const config = loadConfig();
+    ensureWorkspace(config);
+
+    const refreshDir = join(config.workspace, "refreshed");
+    mkdirSync(refreshDir, { recursive: true });
+
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const trackerPath = join(config.workspace, ".last-refresh");
+
+    // Read last refresh time
+    let lastRefresh = 0;
+    if (existsSync(trackerPath)) {
+      try {
+        lastRefresh = Number(readFileSync(trackerPath, "utf-8").trim());
+      } catch { /* first run */ }
+    }
+
+    console.log(`🔄 Clone Refresh — 增量更新语料`);
+    console.log(`  上次刷新: ${lastRefresh ? new Date(lastRefresh).toISOString().slice(0, 10) : "从未"}`);
+    console.log(``);
+
+    // Step 1: Ingest new conversations
+    console.log(`📝 Step 1: 采集新对话...`);
+    const ingestResult = ingest(config, opts.source);
+
+    // Step 2: Export recallnest memories (if available)
+    if (!opts.skipRecallnest) {
+      console.log(`\n🧠 Step 2: 导出 RecallNest 记忆...`);
+      const recallnestCli = expandHome("~/recallnest/lm");
+      const days = opts.days || "14";
+
+      if (existsSync(recallnestCli)) {
+        const exportPath = join(refreshDir, `recallnest-${timestamp}.md`);
+        try {
+          const { execFileSync } = require("node:child_process");
+          execFileSync(
+            recallnestCli,
+            ["export-memories", "--days", days, "--output", exportPath],
+            { stdio: ["ignore", "pipe", "pipe"], timeout: 60000 },
+          );
+          console.log(`  ✅ 导出到 ${exportPath}`);
+        } catch (err: any) {
+          console.log(`  ⚠️ RecallNest 导出失败: ${err.message || err}`);
+        }
+      } else {
+        console.log(`  ⚠️ RecallNest CLI 未找到 (${recallnestCli})，跳过`);
+      }
+    } else {
+      console.log(`\n🧠 Step 2: 跳过 RecallNest 导出`);
+    }
+
+    // Step 3: Refine (processes everything in raw/)
+    console.log(`\n✨ Step 3: 清洗 & 去重...`);
+    const refineResult = refine(config.workspace);
+
+    // Step 4: Copy refreshed content summary
+    const summaryLines = [
+      `# Clone Refresh ${timestamp}`,
+      ``,
+      `- 上次刷新: ${lastRefresh ? new Date(lastRefresh).toISOString().slice(0, 10) : "首次"}`,
+      `- 采集: ${ingestResult.totalFiles} files, ${ingestResult.totalEntries} entries`,
+      `- 精炼: ${refineResult.totalInput} → ${refineResult.totalOutput} entries`,
+      `- 去重: ${refineResult.duplicatesRemoved}`,
+      `- PII: ${refineResult.piiRedacted} redacted`,
+      ``,
+      `## 下一步`,
+      ``,
+      `将 refined/ 目录下的更新文件上传到 NotebookLM 语料库，`,
+      `让数字分身「小试AI」获得最新记忆。`,
+      ``,
+      `需要更新的文件:`,
+    ];
+
+    const refinedDir = join(config.workspace, "refined");
+    if (existsSync(refinedDir)) {
+      for (const f of readdirSync(refinedDir).filter(f => f.endsWith(".md"))) {
+        const size = statSync(join(refinedDir, f)).size;
+        summaryLines.push(`- ${f} (${(size / 1024).toFixed(1)}KB)`);
+      }
+    }
+
+    const summaryPath = join(refreshDir, `refresh-${timestamp}.md`);
+    writeFileSync(summaryPath, summaryLines.join("\n"), "utf-8");
+
+    // Update tracker
+    writeFileSync(trackerPath, String(Date.now()), "utf-8");
+
+    console.log(`\n✅ 刷新完成！`);
+    console.log(`  报告: ${summaryPath}`);
+    console.log(`  精炼: ${refinedDir}`);
+    console.log(`\n📤 下一步: 将 refined/ 文件上传到 NotebookLM 更新分身语料`);
+  });
+
 function ensureWorkspace(config: CloneConfig) {
   mkdirSync(config.workspace, { recursive: true });
   mkdirSync(join(config.workspace, "raw"), { recursive: true });
