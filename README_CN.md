@@ -44,6 +44,20 @@ bun run src/cli.ts quality
 
 然后在 Claude Code 中调用 Skill 进行 Soul Forging（Stage 4）。
 
+### 持续更新分身
+
+部署后，用 `clone refresh` 让分身跟上你的最新记忆：
+
+```bash
+# 增量更新：新对话 + RecallNest 记忆 → 清洗后的语料
+bun run src/cli.ts refresh
+
+# 自定义：最近 30 天，跳过 RecallNest
+bun run src/cli.ts refresh --days 30 --skip-recallnest
+```
+
+> 需要 [RecallNest](https://github.com/AliceLJY/recallnest) 安装在 `~/recallnest/`。未安装可用 `--skip-recallnest` 跳过。
+
 ## CLI 命令
 
 | 命令 | 说明 |
@@ -56,6 +70,7 @@ bun run src/cli.ts quality
 | `clone stats` | 显示语料统计 |
 | `clone verify-template` | 生成测试用例模板 |
 | `clone deploy-guide --platform <p>` | 生成部署指南 |
+| `clone refresh` | 增量更新：采集新对话 + RecallNest 记忆 → 清洗 → 更新语料 |
 
 ## MCP 工具
 
@@ -76,6 +91,7 @@ Stage 3: 语料清洗 ────── CLI: clone refine + clone quality
 Stage 4: 灵魂锻造 ────── Skill（读取清洗后语料，提取人格）
 Stage 5: 验证测试 ────── CLI: clone verify-template + Skill（评分）
 Stage 6: 部署上线 ────── CLI: clone deploy-guide + Skill（个性化建议）
+Stage 7: 活的分身 ────── CLI: clone refresh（增量更新 + RecallNest 联动）
 ```
 
 ## 致谢
