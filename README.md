@@ -44,6 +44,20 @@ bun run src/cli.ts quality
 
 Then invoke the Skill in Claude Code for Soul Forging (Stage 4).
 
+### Keep Your Clone Updated
+
+After initial deployment, use `clone refresh` to feed new conversations and memories to your clone:
+
+```bash
+# incremental update: new conversations + RecallNest memories → refined corpus
+bun run src/cli.ts refresh
+
+# customize: last 30 days of memories, skip RecallNest
+bun run src/cli.ts refresh --days 30 --skip-recallnest
+```
+
+> Requires [RecallNest](https://github.com/AliceLJY/recallnest) installed at `~/recallnest/` for memory export. Use `--skip-recallnest` if not installed.
+
 ## CLI Commands
 
 | Command | Description |
@@ -56,6 +70,7 @@ Then invoke the Skill in Claude Code for Soul Forging (Stage 4).
 | `clone stats` | Show corpus statistics |
 | `clone verify-template` | Generate test case template |
 | `clone deploy-guide --platform <p>` | Generate deployment guide |
+| `clone refresh` | Incremental update: ingest new conversations + RecallNest memories, refine |
 
 ## MCP Tools
 
@@ -99,6 +114,7 @@ Stage 3: Data Refining ────── CLI: clone refine + clone quality
 Stage 4: Soul Forging ─────── Skill (reads refined corpus, extracts personality)
 Stage 5: Verification ─────── CLI: clone verify-template + Skill (scoring)
 Stage 6: Deployment ────────── CLI: clone deploy-guide + Skill (customization)
+Stage 7: Living Clone ─────── CLI: clone refresh (incremental update + RecallNest)
 ```
 
 ## Architecture
