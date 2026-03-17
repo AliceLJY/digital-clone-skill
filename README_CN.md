@@ -1,26 +1,44 @@
-# Digital Clone 数字分身工具
+<div align="center">
+
+# Digital Clone
+
+**语料驱动的数字分身工具**
+
+*采集你的 AI 对话，提取你的人格特质，部署一个说话像你的分身。*
+
+一套 CLI/MCP 数据管道 + Claude Code Skill，把你的对话历史转化为数字分身——扫描 transcript、清洗数据、提取人格、生成 System Prompt 并部署。
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-Skill-blueviolet)](https://claude.com/claude-code)
+[![Bun](https://img.shields.io/badge/Runtime-Bun-f9f1e1?logo=bun)](https://bun.sh)
+[![MCP](https://img.shields.io/badge/MCP-5_tools-blue)](https://modelcontextprotocol.io)
 
 [English](README.md) | **简体中文**
 
-> 语料驱动的数字分身工具 — 从 AI 对话和写作中采集、清洗、评估人格数据。
+</div>
 
-Digital Clone 把 CLI/MCP 数据管道和 Claude Code Skill 结合在一起。工具负责机械性工作（扫描、清洗、去重、PII 脱敏、质量评估），Skill 负责 AI 擅长的事（人格提取、System Prompt 生成、验证评分）。
+---
 
-## 总览
+## 它能做什么
 
-| 层 | 做什么 |
-|----|--------|
-| Ingest | 扫描 Claude Code、Codex、Gemini CLI 对话 + markdown + 文章 |
-| Refine | 去重、PII 脱敏、格式统一 |
-| Quality | 体量、纯度、覆盖面、时效性评估 |
-| Soul Forging | 人格提取 + System Prompt 生成（Skill） |
-| Verify | 测试用例模板 + 评分标准 |
-| Deploy | 平台部署指南 |
+工具负责机械性工作（扫描、清洗、去重、PII 脱敏、质量评估）。Skill 负责 AI 擅长的事（人格提取、System Prompt 生成、验证评分）。
 
-## 两种模式
+| 阶段 | 名称 | 方式 |
+|------|------|------|
+| 1 | 目标画像 | Skill（对话式） |
+| 2 | 语料搜集 | CLI：`clone ingest` / `clone import` |
+| 3 | 语料清洗 | CLI：`clone refine` + `clone quality` |
+| 4 | 灵魂锻造 | Skill（读取语料，提取人格） |
+| 5 | 验证测试 | CLI：`clone verify-template` + Skill（评分） |
+| 6 | 部署上线 | CLI：`clone deploy-guide` + Skill |
+| 7 | 活的分身 | CLI：`clone refresh`（增量更新 + RecallNest 联动） |
 
-- **Self Mode**：从本地 AI 对话和写作克隆自己
-- **Mentor Mode**：从手动采集的语料克隆名人
+### 两种模式
+
+- **Self Mode** —— 从本地 AI 对话和写作克隆自己
+- **Mentor Mode** —— 从手动采集的语料克隆名人
+
+---
 
 ## 快速开始
 
@@ -42,11 +60,9 @@ bun run src/cli.ts refine
 bun run src/cli.ts quality
 ```
 
-然后在 Claude Code 中调用 Skill 进行 Soul Forging（Stage 4）。
+然后在 Claude Code 中调用 Skill 进行灵魂锻造（Stage 4）。
 
 ### 持续更新分身
-
-部署后，用 `clone refresh` 让分身跟上你的最新记忆：
 
 ```bash
 # 增量更新：新对话 + RecallNest 记忆 → 清洗后的语料
@@ -57,6 +73,15 @@ bun run src/cli.ts refresh --days 30 --skip-recallnest
 ```
 
 > 需要 [RecallNest](https://github.com/AliceLJY/recallnest) 安装在 `~/recallnest/`。未安装可用 `--skip-recallnest` 跳过。
+
+### Skill 安装
+
+```bash
+mkdir -p ~/.claude/skills/digital-clone
+cp SKILL.md ~/.claude/skills/digital-clone/
+```
+
+---
 
 ## CLI 命令
 
@@ -72,7 +97,10 @@ bun run src/cli.ts refresh --days 30 --skip-recallnest
 | `clone deploy-guide --platform <p>` | 生成部署指南 |
 | `clone refresh` | 增量更新：采集新对话 + RecallNest 记忆 → 清洗 → 更新语料 |
 
-## MCP 工具
+---
+
+<details>
+<summary><strong>MCP 工具（5 个）</strong></summary>
 
 | 工具 | 说明 |
 |------|------|
@@ -82,17 +110,40 @@ bun run src/cli.ts refresh --days 30 --skip-recallnest
 | `clone_stats` | 显示统计 |
 | `clone_read_corpus` | 读取清洗后的语料片段（供 AI 做人格提取） |
 
-## 工作流
+**MCP 配置（Claude Code）：**
 
+```json
+{
+  "mcpServers": {
+    "digital-clone": {
+      "command": "bun",
+      "args": ["run", "/path/to/digital-clone-skill/src/mcp-server.ts"],
+      "cwd": "/path/to/digital-clone-skill"
+    }
+  }
+}
 ```
-Stage 1: 目标画像 ────── Skill（对话式）
-Stage 2: 语料搜集 ────── CLI: clone ingest / clone import
-Stage 3: 语料清洗 ────── CLI: clone refine + clone quality
-Stage 4: 灵魂锻造 ────── Skill（读取清洗后语料，提取人格）
-Stage 5: 验证测试 ────── CLI: clone verify-template + Skill（评分）
-Stage 6: 部署上线 ────── CLI: clone deploy-guide + Skill（个性化建议）
-Stage 7: 活的分身 ────── CLI: clone refresh（增量更新 + RecallNest 联动）
-```
+
+</details>
+
+<details>
+<summary><strong>架构</strong></summary>
+
+| 文件 | 职责 |
+|------|------|
+| `src/cli.ts` | CLI 入口 |
+| `src/mcp-server.ts` | MCP 工具 |
+| `src/parsers.ts` | 多源 transcript 解析 |
+| `src/ingest.ts` | 语料采集管道 |
+| `src/refine.ts` | 去重 + PII 脱敏 + 格式统一 |
+| `src/quality.ts` | 质量评估 + 报告 |
+| `src/templates.ts` | 验证和部署模板生成 |
+| `src/config.ts` | 配置管理 |
+| `SKILL.md` | Claude Code Skill（灵魂锻造） |
+
+</details>
+
+---
 
 ## 致谢
 
@@ -100,14 +151,12 @@ Stage 7: 活的分身 ────── CLI: clone refresh（增量更新 + Rec
 |------|------|
 | Claude Code | 基础架构、CLI、MCP、解析器 |
 | [RecallNest](https://github.com/AliceLJY/recallnest) | CC/Codex/Gemini 对话解析器架构 |
-| [@MinLiBuilds](https://x.com/MinLiBuilds) | Naval 克隆教程 — 最初的灵感来源 |
+| [@MinLiBuilds](https://x.com/MinLiBuilds) | Naval 克隆教程 —— 最初的灵感来源 |
 
 ## 作者
 
-作者：**小试AI**（[@AliceLJY](https://github.com/AliceLJY)）
+作者是 **小试AI**（[@AliceLJY](https://github.com/AliceLJY)），公众号为 **我的AI小木屋**。
 
-公众号：**我的AI小木屋**
-
-## License
+## 许可证
 
 MIT
