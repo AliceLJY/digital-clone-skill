@@ -15,10 +15,10 @@ trigger:
 allowed-tools:
   - All
 metadata:
-  version: "1.0"
+  version: "1.1"
   auto-trigger: true
   author: "小试AI"
-  inspired-by: "@MinLiBuilds Naval clone tutorial"
+  inspired-by: "@MinLiBuilds Naval clone tutorial, alchaincyf/nuwa-skill (6-angle research + three-pass verification)"
 ---
 
 # Digital Clone v1.0: Build Your Digital Mentor
@@ -67,6 +67,14 @@ All outputs go to `./clone-workspace/` (created at Stage 1):
 ./clone-workspace/
 ├── raw/               # Stage 2: raw corpus files
 ├── refined/           # Stage 3: cleaned & unified corpus
+├── references/        # Stage 1 (Mentor Mode): structured research by angle
+│   └── research/
+│       ├── 01-primary-voice.md      # Agent 1: 著作/博客/长文（此人说了什么）
+│       ├── 02-live-reactions.md     # Agent 2: 访谈/播客/辩论（即兴反应和争论模式）
+│       ├── 03-external-views.md     # Agent 3: 批评者/同行/传记（别人怎么看）
+│       ├── 04-decisions-actions.md  # Agent 4: 决策/行动记录（做了什么 vs 说了什么）
+│       ├── 05-social-fragments.md   # Agent 5: 社交媒体/短帖（负空间+表达习惯）
+│       └── 06-timeline.md          # Agent 6: 时间线（思想演变轨迹）
 ├── profile.md         # Stage 1: target profile & data map
 ├── quality-report.md  # Stage 3: corpus quality assessment
 ├── persona.md         # Stage 4: extracted personality profile
@@ -103,24 +111,72 @@ Ask the user:
 2. Output a data inventory table: source → file count → estimated tokens → priority
 
 **Mentor Mode:**
-1. Generate a Deep Research prompt for the user to run in Gemini/Grok:
-   ```
-   请帮我全面调研 [TARGET NAME] 的第一手公开语料来源。我需要：
-   1. 他/她的官方博客/个人网站（含存档）
-   2. X/Twitter 账号及发推频率
-   3. 播客出演记录（含音频/文字稿链接）
-   4. 出版书籍（含免费在线版本）
-   5. 公开演讲/访谈视频（含文字稿）
-   6. 已有的第三方整理资源（如粉丝整理的语录集）
-   请按数据纯度排序：原声 > 访谈 > 书籍 > 第三方整理。给出每个来源的直接链接。
-   ```
-2. Wait for user to run and paste results
-3. Parse results into a prioritized data map
+
+Launch 6 parallel sub-agents, each targeting a different **analysis angle**. Different angles need different search strategies — "what this person wrote" vs "what critics say about them" are fundamentally different retrieval tasks.
+
+| Agent | Search Target | Key Extractions | Output File |
+|-------|--------------|-----------------|-------------|
+| 1 **Primary Voice** | Books, blogs, essays, newsletters | Core arguments (repeated 3+ times = true belief), self-coined terms, reading lists | `01-primary-voice.md` |
+| 2 **Live Reactions** | Podcasts, interviews, AMAs, **debates** | Responses under pressure, improvised analogies, changed stances, **how they argue when challenged** | `02-live-reactions.md` |
+| 3 **External Views** | Biographies, book reviews, peer analysis, critics | Patterns outsiders observe but the person can't see, **blind spots**, controversies, peer comparisons | `03-external-views.md` |
+| 4 **Decisions & Actions** | Major decisions, pivots, controversial actions | Decision logic, post-hoc reflections, **gaps between what they say and what they do** | `04-decisions-actions.md` |
+| 5 **Social Fragments** | X/Twitter, Weibo, short-form posts | High-freq expressions, controversial stances, humor style, **topics they systematically avoid** (negative space) | `05-social-fragments.md` |
+| 6 **Timeline** | Birth/debut to present | Key milestones, **inflection points where their thinking changed**, last 12 months activity | `06-timeline.md` |
+
+**Agent requirements:**
+- Save results to `references/research/0X-xxx.md`
+- Label source credibility: firsthand (此人原话) > secondhand (他人转述) > inference (推断)
+- When contradictions are found: **preserve them** — don't smooth over
+- When info is sparse: say so, don't fill gaps with speculation
+
+**Source priority:**
+
+| Source Type | What It Reveals | Weight |
+|-------------|----------------|--------|
+| Their own writing | Systematic thinking | Highest |
+| Live interviews/debates | Real-time reasoning + argument patterns | Highest |
+| Actual decisions | True beliefs vs stated beliefs | Highest |
+| Social media | Expression habits + negative space | Medium |
+| Others' analysis | Blind spots + external patterns | Medium |
+| Secondhand accounts | Reference only, needs verification | Low |
+
+**Scaling rule:** For info-sparse targets (< 10 findable sources), reduce to 3 agents (Primary Voice + Live Reactions + External Views), skip the rest. Flag to user: "信息有限，克隆精度会降低。"
+
+**Core principle (from nuwa-skill):** 宁可生成一个诚实的 60 分克隆并标注清楚局限，也不要一个看似完美但编造了信息的 90 分克隆。
 
 **Output**: `profile.md` — target identity, purpose, data map with priorities
 
 ```
-👉 下一步：回复「继续」进入 Stage 2（语料搜集），或告诉我需要修改的地方。
+👉 下一步：回复「继续」进入 Stage 1.5（调研质量审查），或告诉我需要修改的地方。
+```
+
+---
+
+### Stage 1.5: Research Review ⏸
+
+> All agents done. Pause and show quality summary before investing in corpus collection.
+
+Display a structured summary:
+
+| Agent | Sources Found | Key Finding | Gaps |
+|-------|-------------|-------------|------|
+| 1 Primary Voice | N | [core thesis] | |
+| 2 Live Reactions | N | [argument pattern found] | |
+| 3 External Views | N | [main criticism] | |
+| 4 Decisions | N | [key say-do gap] | |
+| 5 Social Fragments | N | [avoided topic found] | |
+| 6 Timeline | N | [latest shift] | |
+
+Also highlight:
+- **Contradictions found**: Agent X says A, Agent Y says B (this is valuable, not a bug)
+- **Negative space signals**: Topics consistently absent across all sources
+- **Info gaps**: Which angles lack sufficient material
+
+User confirms → proceed to Stage 2.
+User wants more on a specific angle → supplement before continuing.
+
+```
+👉 下一步：回复「继续」进入 Stage 2（语料搜集），或指定需要补充的角度。
 ```
 
 ---
@@ -137,30 +193,29 @@ Ask the user:
 2. Report: X files collected, estimated Y tokens
 
 **Mentor Mode:**
-1. Generate collection toolkit for user:
 
-   **a) Blog/Website extraction prompt:**
-   ```
-   打开 [BLOG URL]，右键 → 查看页面源代码 → Ctrl+A 全选 → 复制。
-   然后发送给 Gemini：「提取这段源码中所有 [YEAR RANGE] 的内容链接，以纯文本列表给我。」
-   ```
+Stage 1 agents already completed the main research. Stage 2 focuses on **converting research into downloadable corpus** and **filling gaps** the user identified in Stage 1.5.
 
-   **b) X/Twitter advanced search syntax:**
+1. **Convert research to corpus files:**
+   - Extract source URLs from `references/research/*.md`
+   - For each URL: download full text → save to `raw/`
+   - Prioritize firsthand sources (highest weight) over secondhand
+
+2. **User-assisted collection** (for content agents can't directly access):
+
+   **X/Twitter search:**
    ```
    from:[username] until:[end-date] -filter:retweets
    ```
-   Explain pagination: note the last tweet date, set that as the next search's `until`.
 
-   **c) Podcast/video transcripts:**
-   - Check if text transcripts exist (cheaper than audio)
-   - If audio-only: note for NotebookLM upload (it auto-transcribes)
+   **Podcast/video transcripts:**
+   - Check if text transcripts exist first
+   - Audio-only: note for NotebookLM upload (auto-transcribes)
 
-   **d) Books/essays:**
-   - Check for free online versions first
-   - Suggest downloading as PDF/TXT
+   **Books/essays:**
+   - Free online versions first, then PDF/TXT download
 
-2. Provide a checklist for user to track collection progress
-3. User downloads files and places them in `./clone-workspace/raw/`
+3. User downloads remaining files → places in `./clone-workspace/raw/`
 
 **Progress Check**: After user confirms collection is done, scan `raw/` and report inventory.
 
@@ -215,9 +270,23 @@ If gaps found, suggest specific sources to fill them.
 
 Read through `refined/` corpus and extract:
 
-1. **Core Mental Models** (3-5):
+1. **Core Mental Models** (3-7):
    - What frameworks does this person use to think?
    - Example (Naval): leverage thinking, specific knowledge, wealth vs status games
+
+   **Three-Pass Verification** — a viewpoint qualifies as "mental model" only if it passes:
+
+   | Verification | Criteria | Example |
+   |-------------|---------|---------|
+   | Cross-domain recurrence | Same framework appears in 2+ different domains | Naval's "leverage" applies to wealth, career, and personal growth |
+   | Generative power | Can predict their stance on new questions | Munger's "inversion" predicts he'd tackle "how to succeed" by first asking "how to fail" |
+   | Exclusivity | Not all smart people think this way — it's distinctly theirs | "Anti-fragility" is distinctly Taleb's lens |
+
+   - 3/3 → Core Mental Model
+   - 1-2/3 → Downgrade to Decision Heuristic (record separately)
+   - 0/3 → Something they said in a specific context, don't include
+
+   Each model records: name, one-line description, source evidence (2+ scenarios), **limitations/failure conditions**
 
 2. **Speaking Style**:
    - Sentence structure (short/long? simple/complex?)
@@ -231,9 +300,41 @@ Read through `refined/` corpus and extract:
    - What do they explicitly reject or criticize?
    - What topics do they refuse to comment on?
 
-4. **Response Patterns** (5 Q&A examples):
+4. **Contradictions & Internal Tensions** (Mentor Mode):
+   Contradictions are personality features, not bugs. Handle three types:
+
+   - **Temporal**: Views evolved over time (early said A, now says B)
+     → Record evolution trajectory, label "early" vs "recent", default to recent
+   - **Domain-specific**: Different rules in different contexts (work vs personal life)
+     → Record per-domain, don't force unification — this IS the person's complexity
+   - **Core tensions**: Inherent value conflicts (e.g., pursues freedom AND discipline)
+     → Record as "core tension" — usually the most interesting part of the person
+
+   **Never**: pick one side and ignore the other; fabricate a reconciliation; pretend the contradiction doesn't exist.
+
+5. **Negative Space** (Mentor Mode):
+   What this person **systematically avoids** defines them as much as what they say.
+
+   Extract from `05-social-fragments.md` and cross-reference all sources:
+   - **Avoided topics**: subjects they never or rarely touch (e.g., Buffett avoids politics in investing contexts)
+   - **Deflection patterns**: how they redirect when pushed on avoided topics (e.g., "that's outside my circle of competence")
+   - **Emotional no-go zones**: feelings or vulnerabilities they never expose publicly
+
+   This directly prevents the clone from making up answers on topics the real person would refuse to engage with.
+
+6. **Argument Patterns** (Mentor Mode):
+   How someone argues when challenged reveals their **real thinking process**, not the polished version.
+
+   Extract from `02-live-reactions.md`:
+   - **Rebuttal style**: data-driven? analogy-based? reframe the premise? attack the assumption?
+   - **Concession patterns**: do they ever say "you're right"? how? or do they never yield?
+   - **Under pressure**: stay calm? get sarcastic? pivot to humor? double down?
+   - **Engagement threshold**: what kind of challenge do they respond to, and what do they ignore?
+
+7. **Response Patterns** (5 Q&A examples):
    - Extract real Q&A pairs from corpus where possible
    - Show how they approach different types of questions
+   - **Include at least 1 example where they were challenged/disagreed with** (from argument patterns)
 
 **Self Mode shortcut**: If `writing-persona.md` exists and is recent, use it as the foundation and enrich with transcript analysis.
 
@@ -264,6 +365,22 @@ Generate a structured System Prompt with these sections:
 - Sentence structure
 - Emotional register
 - Specific phrases to use / avoid
+
+# Internal Tensions (内在矛盾) — Mentor Mode
+[From Step 4.1.4 — list contradiction pairs with context]
+- These are features, not bugs. When asked about a tension area, acknowledge both sides.
+- Temporal shifts: default to recent position, but mention evolution if relevant.
+
+# Negative Space (不涉及的领域) — Mentor Mode
+[From Step 4.1.5 — topics this person avoids and how they deflect]
+- When asked about these topics: deflect the way the real person would, don't fabricate an opinion.
+- Example deflection phrases: [extracted from corpus]
+
+# Argument Style (争论方式) — Mentor Mode
+[From Step 4.1.6 — how this person pushes back]
+- Rebuttal method: [data/analogy/reframe/etc.]
+- Concession style: [never/rare/specific pattern]
+- Under pressure: [calm/sarcastic/humor/doubledown]
 
 # Response Format (回答格式)
 [How should responses be structured? Short tweets? Long essays? Socratic questions?]
@@ -299,6 +416,9 @@ Create 4-6 test questions across these dimensions:
 | 4 | **Specific Knowledge** | Does it reference actual corpus content, not hallucinations? | "你怎么看加密货币？" |
 | 5 | **Anti-Sycophancy** | Does it push back when appropriate? | "我要全职做自媒体，你支持吗？" |
 | 6 | **Edge Case** | How does it handle topics outside its expertise? | "推荐一个治感冒的中药方子" |
+| 7 | **Voice Test** | Write 100 words in the clone's voice — is it recognizable? | "用你的风格分析一下远程办公的利弊" |
+| 8 | **Negative Space** | Does it correctly avoid topics the real person avoids? | [use topic from Step 4.1.5] |
+| 9 | **Argument Test** | When challenged, does it push back the right way? | "我不同意你说的 X，因为 Y" |
 
 **Step 5.2: Scoring Rubric**
 
@@ -308,6 +428,17 @@ For each test case, provide:
   - "这取决于你的选择" → FAIL (端水大师)
   - Generic self-help advice → FAIL (失去个性)
   - Contradicts known corpus positions → FAIL (幻觉)
+
+**Mentor Mode Structural Pass Criteria:**
+
+| Check | Pass | Fail Signal |
+|-------|------|-------------|
+| Mental models | 3-7, each with source evidence + failure conditions | < 3 or > 10, or no evidence |
+| Contradictions | >= 2 tension pairs documented | Views suspiciously consistent |
+| Negative space | >= 2 avoided topics with deflection patterns | Answers everything confidently |
+| Voice recognition | Identifiable as this person in 100 words | Reads like generic AI |
+| Primary source ratio | > 50% firsthand material | Mostly secondhand accounts |
+| Argument style | Distinct rebuttal/concession pattern documented | No pushback behavior described |
 
 **Step 5.3: Iteration**
 
@@ -388,7 +519,7 @@ Ask user if they want to:
 
 **Clone Naval:**
 > "帮我克隆纳瓦尔做数字导师"
-→ Mentor Mode, start at Stage 1, generate Deep Research prompt
+→ Mentor Mode, start at Stage 1, launch 6-angle research agents
 
 **Clone with existing corpus:**
 > "我已经收集好了 Paul Graham 的语料，在 ~/pg-corpus/ 里"
