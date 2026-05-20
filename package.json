@@ -1,6 +1,6 @@
 {
   "name": "digital-clone",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Corpus-driven digital clone toolkit — collect, refine, and assess persona data from AI conversations and writings",
   "type": "module",
   "bin": {
