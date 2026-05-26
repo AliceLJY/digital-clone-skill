@@ -145,6 +145,21 @@ cp SKILL.md ~/.claude/skills/digital-clone/
 
 ---
 
+## 生态
+
+**小试AI** 开源 AI 工作流生态的一部分：
+
+| 项目 | 简介 |
+|------|------|
+| [recallnest](https://github.com/AliceLJY/recallnest) | MCP 记忆工作台（LanceDB + Jina v5） |
+| [content-publisher](https://github.com/AliceLJY/content-publisher) | 配图 + 排版 + 公众号发布 |
+| [openclaw-tunnel](https://github.com/AliceLJY/openclaw-tunnel) | Docker ↔ 宿主机 CLI 桥（/cc /codex /gemini） |
+| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Claude / Codex / Gemini 的 Telegram bot |
+| [claude-code-studio](https://github.com/AliceLJY/claude-code-studio) | Claude Code 多会话协作平台 |
+| [cc-empire](https://github.com/AliceLJY/cc-empire) | 完整的 Claude Code 工作流脚手架（规则 + 钩子 + agent） |
+| [etwin-bot](https://github.com/AliceLJY/etwin-bot) | E-Twin Telegram bot —— 本 skill 的 1:1 实例化部署 |
+| [trio-handoff](https://github.com/AliceLJY/trio-handoff) | AI 编程 agent 之间的双向交接 bundle |
+
 ## 致谢
 
 | 来源 | 贡献 |
