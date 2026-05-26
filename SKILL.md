@@ -4,6 +4,8 @@ description: |
   A 6-stage semi-automated workflow to create digital clones (mentors/personas) from corpus data.
   Stages: Target Profiling → Data Hunting → Data Refining → Soul Forging → Verification → Deployment.
   Supports two modes: Self Mode (clone yourself) and Mentor Mode (clone a public figure).
+  Do NOT use for: 聊天机器人通用配置（用 openclaw）, 风格迁移/文案仿写, 仅需语料清洗不需完整克隆
+measurable_outcome: "System prompt 产出 + 验证对话通过 3 轮一致性测试"
 trigger:
   - "克隆"
   - "数字分身"
