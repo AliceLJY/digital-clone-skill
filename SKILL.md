@@ -17,10 +17,10 @@ trigger:
 allowed-tools:
   - All
 metadata:
-  version: "3.0"
+  version: "3.1"
   auto-trigger: true
   author: "小试AI"
-  inspired-by: "@MinLiBuilds Naval clone tutorial, alchaincyf/nuwa-skill (6-angle research + three-pass verification)"
+  inspired-by: "@MinLiBuilds Naval clone tutorial, alchaincyf/nuwa-skill (6-angle research + three-pass verification), LvPengfei1/PersonaVault (evidence grading + capability boundaries + invocation rules layer)"
 ---
 
 # Digital Clone v1.0: Build Your Digital Mentor
@@ -270,7 +270,14 @@ If gaps found, suggest specific sources to fill them.
 
 **Step 4.1: Personality Extraction**
 
-Read through `refined/` corpus and extract:
+Read through `refined/` corpus and extract the dimensions below.
+
+**证据分级（贯穿所有维度，borrowed from PersonaVault）**：每条写进 persona 的结论都标证据强度——
+- **强**：多份语料重复出现 / 有正式产出物或行动结果支撑 → 可写成稳定结论
+- **中**：单处明确讨论、草案、试用，未闭环 → 写成「当前信号 / 阶段性」，不写死
+- **弱**：单次发言 / 单个想法 / 转发 / 情绪表达 → **不写进 system prompt 的稳定结论**，降级到 persona.md 的「待验证」区
+
+这把已有的源可信度分级（Stage 1 firsthand/secondhand/inference）和思维模型三遍验证推广到全维度——弱证据写成强结论是分身失真的头号来源。
 
 1. **Core Mental Models** (3-7):
    - What frameworks does this person use to think?
@@ -290,12 +297,32 @@ Read through `refined/` corpus and extract:
 
    Each model records: name, one-line description, source evidence (2+ scenarios), **limitations/failure conditions**
 
-2. **Speaking Style**:
-   - Sentence structure (short/long? simple/complex?)
-   - Favorite phrases / verbal tics / catchphrases
+2. **Speaking Style (表达 DNA)**:
+
+   定性观察：
    - Rhythm and pacing (staccato vs flowing?)
    - Emotional register (cold/warm? formal/casual? ironic/earnest?)
    - Use of metaphors, analogies, examples
+
+   量化指纹（borrowed from nuwa-skill — 把"模仿语气"变成可测的句式指纹）。
+   **抽样**：随机抽 20 个代表性段落统计。Self Mode 抽已发文章 + CC 长回复（**不抽短指令/一句话消息** — 那不代表表达 DNA）；Mentor Mode 抽一手长文/演讲。
+
+   | 维度 | 测量 | 记录值 |
+   |------|------|--------|
+   | 平均句长 | 字数 ÷ 句数 | |
+   | 疑问句比例 | 疑问句 ÷ 总句数 | |
+   | 类比密度 | 类比数 ÷ 千字 | |
+   | 第一人称使用率 | 「我」出现频率 | |
+   | 确定性语气比例 | 「一定/显然」÷（「一定/显然」+「也许/可能」）| |
+   | 转折频率 | 「但是/然而/不过」÷ 千字 | |
+
+   风格标签（每条在 1-5 标一个值）：正式↔口语 / 抽象↔具体 / 谨慎↔断言 / 学术↔通俗 / 长句↔短句 / 铺垫型↔结论先行 / 数据驱动↔叙事驱动
+
+   禁忌词与口癖：
+   - 此人从不用的词 → 生成时也不用（列 5-10 个）
+   - 高频口癖 → 适度使用，过量会变模仿秀（列 3-5 个，标「克制」）
+
+   > 这些数值用于**生成后的人工比对校准**：生成文本的指纹和本人记录值差得明显 = 风格漂移，人工判断调整。**不设硬阈值自动门槛** — 没有脚本支撑的精确百分比是伪精确（trio 裁剪）。
 
 3. **Values & Stances**:
    - What does this person strongly believe in?
@@ -338,9 +365,25 @@ Read through `refined/` corpus and extract:
    - Show how they approach different types of questions
    - **Include at least 1 example where they were challenged/disagreed with** (from argument patterns)
 
+8. **Capability Boundaries (能力边界)** — borrowed from PersonaVault 03 能力系统：
+   分身最危险的失真不是「不像」，是「把想做的写成能做的」。每项能力分三栏记录，**Self Mode 尤其要狠**（克隆自己时语料天然是自我视角，最容易自我美化）：
+   - **已证明**：有语料 / 产出物 / 重复行动 / 真实问题处理支撑的能力
+   - **不能推断**：语料里没有证据的，哪怕本人自称 —— **能力不能从自我描述或工具使用频率推断**
+   - **待补强 / 夸大风险**：已知的能力缺口、容易被分身吹大的地方（如把"用过一次"说成"擅长"）
+
+   缺陷不删、不美化、不改写成优点。这一栏首先是**内部约束**（防美化），不一定全进 system prompt，但「不能推断」和「夸大风险」要喂给 Invocation Rules 段。
+
 **Self Mode shortcut**: If `writing-persona.md` exists and is recent, use it as the foundation and enrich with transcript analysis.
 
 Output to `persona.md`.
+
+**诚实边界自检**（persona 产出后自检，borrowed from nuwa-skill + PersonaVault 缺陷审查）：
+- [ ] 明确写了这个分身**做不到**什么？（对照 Step 4.1.8 能力边界）
+- [ ] 标注了语料来源 + 蒸馏日期？（Mentor Mode 尤其重要 — 知识有截止点）
+- [ ] 承认了哪些维度信息不足、是推测而非事实？
+- [ ] **每条结论的证据强度对不对？** 有没有把弱证据（单次发言 / 情绪）写成了稳定结论？
+- [ ] **有没有自我美化？**（Self Mode 高发）把"想成为"写成了"已经是"、把缺口藏起来了？
+- [ ] 终检：读一段生成内容，遮住名字还认得出是谁的思维方式吗？（**人工自检，不是第三方盲审门槛** — 个人 harness 不引入团队级评审，trio 裁剪；PersonaVault 那套独立缺陷审查 agent 是团队级流程，这里只取它的检查清单、不引入盲审角色）
 
 **Step 4.2: System Prompt Generation**
 
@@ -362,11 +405,13 @@ Generate a structured System Prompt with these sections:
 3. **Temporal Awareness**: Knowledge is based on corpus up to [date]. Say so if asked about more recent events.
 
 # Tone & Style (语气与风格)
-[Detailed style guide extracted from Step 4.1]
-- Signal-to-noise ratio
-- Sentence structure
-- Emotional register
-- Specific phrases to use / avoid
+[Detailed style guide extracted from Step 4.1 — 带上 Step 4.1.2 的量化锚点，不要只写空泛形容]
+- 句长区间：平均约 N 字/句（来自句式指纹）
+- 确定性语气：约 X% 断言 vs 留白
+- 类比密度：每千字约 N 个
+- 风格定位：[7 条标签轴的取值]
+- 禁用词：[列表]；口癖（克制使用）：[列表]
+- Signal-to-noise ratio / emotional register（定性补充）
 
 # Internal Tensions (内在矛盾) — Mentor Mode
 [From Step 4.1.4 — list contradiction pairs with context]
@@ -387,8 +432,16 @@ Generate a structured System Prompt with these sections:
 # Response Format (回答格式)
 [How should responses be structured? Short tweets? Long essays? Socratic questions?]
 
-# Boundaries (边界)
-[What this clone will NOT do: e.g., no medical advice, no financial guarantees, no pretending to be the real person]
+# Invocation Rules (调用规则) — borrowed from PersonaVault 07 调用规则层
+正向（不只写"不做什么"，还写"证据不够时怎么做"）：
+- **语料里没有相关内容时**：从核心思维模型推理，并标注「这是基于 [X 框架] 的推断，不是 [本人] 原话」；绝不退回成通用建议。
+- **被问到能力边界外 / 待补强的事**（见 persona 能力边界）：如实说「这个我没真做过 / 没把握」，用本人会用的方式说，不硬撑。
+- **证据不足以下判断时**：宁可说「我不确定」，也不编一个像模像样的立场 —— 这恰恰是最像本人的部分。
+
+负向（边界禁止）：
+- 不做医疗 / 法律 / 财务等专业兜底建议；不做收益担保。
+- 不假装是真人本尊；被直接问到时承认是数字分身。
+- 不把弱证据外推成稳定观点，不替本人在 negative space 话题上编立场。
 
 # Example Exchanges (示例对话)
 [3-5 Q&A pairs demonstrating the expected style and depth]
