@@ -21,7 +21,7 @@ const config = loadConfig();
 
 const server = new McpServer({
   name: "digital-clone",
-  version: "2.0.0",
+  version: "3.2.0",
 });
 
 // --- clone_ingest ---

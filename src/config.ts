@@ -80,6 +80,17 @@ export function detectMemoryDir(): string | null {
   return null;
 }
 
+/**
+ * CLONE_WORKSPACE pins the workspace to a fixed path so CLI runs and
+ * Skill sessions started from different directories share one workspace.
+ */
+function applyEnvOverrides(config: CloneConfig): CloneConfig {
+  if (process.env.CLONE_WORKSPACE) {
+    return { ...config, workspace: expandHome(process.env.CLONE_WORKSPACE) };
+  }
+  return config;
+}
+
 export function loadConfig(configPath?: string): CloneConfig {
   const paths = [
     configPath,
@@ -91,14 +102,14 @@ export function loadConfig(configPath?: string): CloneConfig {
     if (existsSync(p)) {
       try {
         const raw = JSON.parse(readFileSync(p, "utf-8"));
-        return { ...DEFAULT_CONFIG, ...raw, sources: { ...DEFAULT_CONFIG.sources, ...raw.sources } };
+        return applyEnvOverrides({ ...DEFAULT_CONFIG, ...raw, sources: { ...DEFAULT_CONFIG.sources, ...raw.sources } });
       } catch {
         // Skip malformed config
       }
     }
   }
 
-  return DEFAULT_CONFIG;
+  return applyEnvOverrides(DEFAULT_CONFIG);
 }
 
 export function resolveSourcePath(config: CloneConfig, source: string): string | null {
