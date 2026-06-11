@@ -17,7 +17,7 @@ const program = new Command();
 program
   .name("clone")
   .description("Digital Clone — corpus-driven persona toolkit")
-  .version("2.0.0");
+  .version("3.2.0");
 
 // --- init ---
 program
@@ -182,7 +182,7 @@ program
 // --- refresh ---
 program
   .command("refresh")
-  .description("Incremental update: ingest new conversations + recallnest memories, refine, append to corpus")
+  .description("Re-scan sources and merge new content into the refined corpus (optionally exports recent RecallNest memories)")
   .option("--source <source>", "Source to refresh: cc, codex, gemini, memory, all", "all")
   .option("--days <n>", "Only include recallnest memories from last N days", "14")
   .option("--skip-recallnest", "Skip recallnest memory export")
@@ -204,7 +204,7 @@ program
       } catch { /* first run */ }
     }
 
-    console.log(`🔄 Clone Refresh — 增量更新语料`);
+    console.log(`🔄 Clone Refresh — 重扫数据源并合并语料`);
     console.log(`  上次刷新: ${lastRefresh ? new Date(lastRefresh).toISOString().slice(0, 10) : "从未"}`);
     console.log(``);
 
@@ -215,7 +215,7 @@ program
     // Step 2: Export recallnest memories (if available)
     if (!opts.skipRecallnest) {
       console.log(`\n🧠 Step 2: 导出 RecallNest 记忆...`);
-      const recallnestCli = expandHome("~/recallnest/lm");
+      const recallnestCli = expandHome(process.env.RECALLNEST_CLI || "~/recallnest/lm");
       const days = opts.days || "14";
 
       if (existsSync(recallnestCli)) {
@@ -254,8 +254,8 @@ program
       ``,
       `## 下一步`,
       ``,
-      `将 refined/ 目录下的更新文件上传到 NotebookLM 语料库，`,
-      `让数字分身「小试AI」获得最新记忆。`,
+      `将 refined/ 目录下的更新文件（排除 *-assistant.md）上传到分身的语料库，`,
+      `让数字分身${config.target ? `「${config.target}」` : ""}获得最新记忆。`,
       ``,
       `需要更新的文件:`,
     ];
@@ -277,7 +277,7 @@ program
     console.log(`\n✅ 刷新完成！`);
     console.log(`  报告: ${summaryPath}`);
     console.log(`  精炼: ${refinedDir}`);
-    console.log(`\n📤 下一步: 将 refined/ 文件上传到 NotebookLM 更新分身语料`);
+    console.log(`\n📤 下一步: 将 refined/ 文件（排除 *-assistant.md）上传到分身语料库`);
   });
 
 function ensureWorkspace(config: CloneConfig) {

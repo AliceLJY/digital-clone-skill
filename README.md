@@ -2,16 +2,14 @@
 
 # Digital Clone
 
-**Corpus-Driven Digital Clone Toolkit**
+**Corpus-Driven Digital Clone Skill for Claude Code**
 
 *Collect your AI conversations, extract your personality, deploy a clone that talks like you.*
 
-A CLI/MCP data pipeline + Claude Code Skill that turns your conversation history into a digital clone — scanning transcripts, cleaning data, extracting personality traits, and generating system prompts for deployment.
+A Claude Code Skill that turns conversation history and writings into a digital clone — guiding you through corpus collection, cleaning, personality extraction, system prompt generation, and verification. Optional Bun-based CLI/MCP tools are included for mechanical data preprocessing.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Skill-blueviolet)](https://claude.com/claude-code)
-[![Bun](https://img.shields.io/badge/Runtime-Bun-f9f1e1?logo=bun)](https://bun.sh)
-[![MCP](https://img.shields.io/badge/MCP-5_tools-blue)](https://modelcontextprotocol.io)
 
 **English** | [简体中文](README_CN.md)
 
@@ -21,86 +19,80 @@ A CLI/MCP data pipeline + Claude Code Skill that turns your conversation history
 
 ## What It Does
 
-Tools handle the mechanical work (scanning, cleaning, dedup, PII sanitization, quality assessment). The Skill handles what AI does best (personality extraction, system prompt generation, verification).
+The Skill walks you through a 6-stage pipeline, entirely conversational — no runtime dependencies required:
 
-| Stage | Name | How |
-|-------|------|-----|
-| 1 | Target Profiling | Skill (conversational) |
-| 2 | Data Hunting | CLI: `clone ingest` / `clone import` |
-| 3 | Data Refining | CLI: `clone refine` + `clone quality` |
-| 4 | Soul Forging | Skill (reads corpus, extracts personality) |
-| 5 | Verification | CLI: `clone verify-template` + Skill (scoring) |
-| 6 | Deployment | CLI: `clone deploy-guide` + Skill |
-| 7 | Living Clone | CLI: `clone refresh` (incremental update + RecallNest) |
+| Stage | Name | What Happens |
+|-------|------|--------------|
+| 1 | Target Profiling | Identify the clone target and map data sources |
+| 2 | Data Hunting | Collect raw corpus (transcripts, articles, research) |
+| 3 | Data Refining | Clean, dedup, PII sanitization, quality assessment |
+| 4 | Soul Forging | Extract personality, generate System Prompt |
+| 5 | Verification | Trap-question testing with pass criteria (target: ≥80%) |
+| 6 | Deployment | Platform-specific deploy guide (NotebookLM / bot / generic LLM) |
 
 ### Two Modes
 
 - **Self Mode** — clone yourself from local AI conversations and writings
-- **Mentor Mode** — clone a public figure from manually collected corpus
+- **Mentor Mode** — clone a public figure via 6-angle parallel research (primary voice, live reactions, external views, decisions, social fragments, timeline)
 
 ---
 
 ## Quick Start
 
-```bash
-git clone https://github.com/AliceLJY/digital-clone-skill.git
-cd digital-clone-skill
-npm install
-
-# Initialize workspace
-bun run src/cli.ts init --target "Your Name" --mode self
-
-# Scan your AI conversations
-bun run src/cli.ts ingest --source all
-
-# Clean and deduplicate
-bun run src/cli.ts refine
-
-# Check corpus quality
-bun run src/cli.ts quality
-```
-
-Then invoke the Skill in Claude Code for Soul Forging (Stage 4).
-
-### Keep Your Clone Updated
-
-```bash
-# Incremental update: new conversations + RecallNest memories → refined corpus
-bun run src/cli.ts refresh
-
-# Customize: last 30 days, skip RecallNest
-bun run src/cli.ts refresh --days 30 --skip-recallnest
-```
-
-> Requires [RecallNest](https://github.com/AliceLJY/recallnest) at `~/recallnest/` for memory export. Use `--skip-recallnest` if not installed.
-
-### Skill Installation
+Install the Skill (this is the whole installation):
 
 ```bash
 mkdir -p ~/.claude/skills/digital-clone
-cp SKILL.md ~/.claude/skills/digital-clone/
+curl -o ~/.claude/skills/digital-clone/SKILL.md \
+  https://raw.githubusercontent.com/AliceLJY/digital-clone-skill/main/SKILL.md
 ```
+
+Then in Claude Code:
+
+> 帮我克隆自己 / "Clone myself from my articles and CC transcripts"
+> 帮我克隆纳瓦尔做数字导师 / "Clone Naval as my digital mentor"
+
+The Skill handles everything conversationally, stage by stage, with your approval at each step. All outputs go to `./clone-workspace/` in your current directory.
 
 ---
 
-## CLI Commands
+## Optional: CLI Preprocessing Tools
+
+> **Requires [Bun](https://bun.sh).** The CLI does not run on Node.js (it uses Bun's TypeScript module resolution). If you don't use Bun, skip this section entirely — the Skill covers the full pipeline on its own.
+
+For large corpora (thousands of transcript files), the CLI does the mechanical work faster than in-conversation processing:
+
+```bash
+git clone https://github.com/AliceLJY/digital-clone-skill.git
+cd digital-clone-skill
+bun install
+
+bun run src/cli.ts init --target "Your Name" --mode self
+bun run src/cli.ts ingest --source all
+bun run src/cli.ts refine
+bun run src/cli.ts quality
+```
+
+**Important:** the workspace path is relative to where you run the commands. If you preprocess with the CLI, start your Claude Code session in the same directory so the Skill finds `./clone-workspace/`. The refined corpus separates `*-user.md` (your voice — used for personality extraction) from `*-assistant.md` (AI replies — reference only, excluded from Soul Forging).
 
 | Command | Description |
 |---------|-------------|
-| `clone init` | Initialize workspace and config |
-| `clone ingest --source <src>` | Scan corpus (cc, codex, gemini, memory, articles, all) |
-| `clone import <path>` | Import external files (Mentor Mode) |
-| `clone refine` | Clean, dedup, sanitize |
-| `clone quality` | Generate quality report |
-| `clone stats` | Show corpus statistics |
-| `clone verify-template` | Generate test case template |
-| `clone deploy-guide --platform <p>` | Generate deployment guide |
-| `clone refresh` | Incremental update with RecallNest integration |
+| `bun run src/cli.ts init` | Initialize workspace and config |
+| `bun run src/cli.ts ingest --source <src>` | Scan corpus (cc, codex, gemini, memory, articles, all) |
+| `bun run src/cli.ts import <path>` | Import external files (Mentor Mode) |
+| `bun run src/cli.ts refine` | Clean, dedup, sanitize |
+| `bun run src/cli.ts quality` | Generate quality report |
+| `bun run src/cli.ts stats` | Show corpus statistics |
+| `bun run src/cli.ts verify-template` | Generate test case template |
+| `bun run src/cli.ts deploy-guide --platform <p>` | Generate deployment guide |
+| `bun run src/cli.ts refresh` | Re-scan sources and merge new content into the refined corpus |
 
----
+Set `CLONE_WORKSPACE` to pin the workspace to a fixed path shared between CLI and Skill sessions.
+
+> `refresh` can optionally pull recent memories from a [RecallNest](https://github.com/AliceLJY/recallnest) install (the author's memory system; set `RECALLNEST_CLI` or place it at `~/recallnest/lm`). Without it, use `--skip-recallnest`.
 
 <details>
-<summary><strong>MCP Tools (5 tools)</strong></summary>
+<summary><strong>MCP Tools (5 tools, also requires Bun)</strong></summary>
 
 | Tool | Description |
 |------|-------------|
@@ -108,7 +100,7 @@ cp SKILL.md ~/.claude/skills/digital-clone/
 | `clone_refine` | Clean and deduplicate |
 | `clone_quality` | Assess corpus quality |
 | `clone_stats` | Show statistics |
-| `clone_read_corpus` | Read refined corpus slices (for AI personality extraction) |
+| `clone_read_corpus` | Read refined corpus slices (defaults to user-side text) |
 
 **MCP Setup (Claude Code):**
 
@@ -131,15 +123,15 @@ cp SKILL.md ~/.claude/skills/digital-clone/
 
 | File | Role |
 |------|------|
-| `src/cli.ts` | CLI entry |
-| `src/mcp-server.ts` | MCP tools |
+| `SKILL.md` | Claude Code Skill — the full 6-stage pipeline (the product) |
+| `src/cli.ts` | Optional CLI entry (Bun) |
+| `src/mcp-server.ts` | Optional MCP tools (Bun) |
 | `src/parsers.ts` | Multi-source transcript parsing |
 | `src/ingest.ts` | Corpus collection pipeline |
 | `src/refine.ts` | Dedup + PII sanitize + normalize |
 | `src/quality.ts` | Quality assessment + report |
 | `src/templates.ts` | Verify + deploy template generation |
 | `src/config.ts` | Configuration management |
-| `SKILL.md` | Claude Code Skill (Soul Forging) |
 
 </details>
 
@@ -152,6 +144,8 @@ cp SKILL.md ~/.claude/skills/digital-clone/
 | Claude Code | Foundation, CLI, MCP server, parsers |
 | [RecallNest](https://github.com/AliceLJY/recallnest) | Parser architecture for CC/Codex/Gemini transcripts |
 | [@MinLiBuilds](https://x.com/MinLiBuilds) | Naval clone tutorial — original inspiration |
+| alchaincyf/nuwa-skill | 6-angle research + three-pass verification |
+| LvPengfei1/PersonaVault | Evidence grading + capability boundaries |
 
 ## Author
 

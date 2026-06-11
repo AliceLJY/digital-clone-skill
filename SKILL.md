@@ -17,7 +17,7 @@ trigger:
 allowed-tools:
   - All
 metadata:
-  version: "3.1"
+  version: "3.2"
   auto-trigger: true
   author: "小试AI"
   inspired-by: "@MinLiBuilds Naval clone tutorial, alchaincyf/nuwa-skill (6-angle research + three-pass verification), LvPengfei1/PersonaVault (evidence grading + capability boundaries + invocation rules layer)"
@@ -63,7 +63,7 @@ At startup, identify which mode the user wants:
 
 ## Workspace Structure
 
-All outputs go to `./clone-workspace/` (created at Stage 1):
+All outputs go to `./clone-workspace/` (created at Stage 1, relative to the current working directory). If the user preprocessed corpus with the optional CLI tools, the workspace lives where they ran the CLI — start from that directory, or locate the existing `clone-workspace/` before creating a new one:
 
 ```
 ./clone-workspace/
@@ -272,6 +272,8 @@ If gaps found, suggest specific sources to fill them.
 
 Read through `refined/` corpus and extract the dimensions below.
 
+**Corpus role contract (Self Mode)**: personality extraction uses the target's own voice only. If the corpus was preprocessed by the CLI, read `*-user.md` files and skip `*-assistant.md` entirely — AI replies are NOT the target's voice and will contaminate the clone with assistant-speak. Assistant-side text may be consulted only as conversational context, never as personality evidence.
+
 **证据分级（贯穿所有维度，borrowed from PersonaVault）**：每条写进 persona 的结论都标证据强度——
 - **强**：多份语料重复出现 / 有正式产出物或行动结果支撑 → 可写成稳定结论
 - **中**：单处明确讨论、草案、试用，未闭环 → 写成「当前信号 / 阶段性」，不写死
@@ -461,7 +463,7 @@ Output to `system-prompt.md`. Show to user for approval.
 
 **Step 5.1: Generate Test Cases**
 
-Create 4-6 test questions across these dimensions:
+Create 6-9 test questions — one per dimension below, covering at least 6 of the 9 (always include #1 Core Philosophy, #2 Style Consistency, and #5 Anti-Sycophancy):
 
 | # | Dimension | Purpose | Example (Naval) |
 |---|-----------|---------|-----------------|
@@ -521,7 +523,7 @@ Generate `deploy-guide.md` based on the user's platform choice:
 ```markdown
 ## Step 1: Upload to NotebookLM
 1. Open notebooklm.google.com → New Notebook
-2. Drag all files from `./clone-workspace/refined/` into the notebook
+2. Drag files from `./clone-workspace/refined/` into the notebook — **exclude `*-assistant.md`** (AI replies are not the target's voice)
 3. Paste any remaining web URLs as sources
 4. Wait for processing (几分钟)
 
@@ -546,7 +548,7 @@ Generate `deploy-guide.md` based on the user's platform choice:
 - For other LLMs (ChatGPT, Claude): paste as the first message or system instruction
 
 ## Step 2: Attach Corpus (if platform supports RAG)
-- Upload `refined/` files as knowledge base / context
+- Upload `refined/` files as knowledge base / context (**exclude `*-assistant.md`** — AI replies are not the target's voice)
 - If no RAG support: the System Prompt includes enough personality info to work standalone
 
 ## Step 3: Test

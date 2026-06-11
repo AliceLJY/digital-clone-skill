@@ -44,7 +44,7 @@ Run these test cases against your deployed clone. Score each response.
 
 Pass rate: ___ / 7
 
-> Target: 5/7 or above before deployment.
+> Target: ≥80% (6/7) before deployment.
 `;
 
   const outPath = join(workspaceDir, "test-cases.md");
@@ -63,7 +63,7 @@ export function generateDeployGuide(
 ## Step 1: Upload to NotebookLM
 
 1. Open [notebooklm.google.com](https://notebooklm.google.com) and create a New Notebook
-2. Drag all files from \`./clone-workspace/refined/\` into the notebook
+2. Drag files from \`./clone-workspace/refined/\` into the notebook — exclude \`*-assistant.md\` (AI replies are not the target's voice)
 3. Paste any remaining web URLs as sources
 4. Wait for processing
 
@@ -77,7 +77,7 @@ export function generateDeployGuide(
 ## Step 3: Verify
 
 1. Run the test cases from \`test-cases.md\`
-2. If pass rate >= 4/6, the clone is ready
+2. If pass rate >= 80% (6/7), the clone is ready
 3. Share the Gem link
 `,
     ccbot: `# Deployment Guide: ${targetName} (CC Bot / OpenClaw)
@@ -91,7 +91,7 @@ The \`system-prompt.md\` is ready to use as-is.
 
 ## Step 2: Attach Corpus
 
-- Upload \`refined/\` files as knowledge base
+- Upload \`refined/\` files as knowledge base (exclude \`*-assistant.md\`)
 - If no RAG support: the System Prompt includes enough personality info
 
 ## Step 3: Verify
@@ -106,7 +106,7 @@ Paste \`system-prompt.md\` as the system instruction or first message.
 
 ## Step 2: Context
 
-- If the platform supports file attachments, upload \`refined/\` files
+- If the platform supports file attachments, upload \`refined/\` files (exclude \`*-assistant.md\`)
 - Otherwise, the System Prompt works standalone
 
 ## Step 3: Verify

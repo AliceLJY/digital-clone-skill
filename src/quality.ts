@@ -85,11 +85,13 @@ export function assessQuality(workspaceDir: string): QualityReport {
   const earliest = timestamps[0] || "unknown";
   const latest = timestamps[timestamps.length - 1] || "unknown";
 
-  // Overall assessment
+  // Overall assessment — purity gates both top ratings: an assistant-heavy
+  // corpus must not look "good", or AI-speak silently contaminates the clone
+  const purityRatio = firstHand / Math.max(1, firstHand + secondHand);
   let overall: QualityReport["overall"] = "insufficient";
-  if (totalTokens >= 200000 && firstHand / Math.max(1, firstHand + secondHand) > 0.4 && coveredTopics.length >= 4) {
+  if (totalTokens >= 200000 && purityRatio > 0.4 && coveredTopics.length >= 4) {
     overall = "excellent";
-  } else if (totalTokens >= 50000 && coveredTopics.length >= 3) {
+  } else if (totalTokens >= 50000 && purityRatio > 0.4 && coveredTopics.length >= 3) {
     overall = "good";
   } else if (totalTokens >= 20000) {
     overall = "fair";
