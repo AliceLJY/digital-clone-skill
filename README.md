@@ -35,6 +35,12 @@ The Skill walks you through a 6-stage pipeline, entirely conversational — no r
 - **Self Mode** — clone yourself from local AI conversations and writings
 - **Mentor Mode** — clone a public figure via 6-angle parallel research (primary voice, live reactions, external views, decisions, social fragments, timeline)
 
+### X/Twitter Source Packets
+
+For Mentor Mode, X/Twitter posts can strengthen the Social Fragments angle when they are treated as evidence, not personality conclusions. If a user needs a reproducible public corpus, [TweetClaw](https://github.com/Xquik-dev/tweetclaw) can optionally collect public tweets, replies, media context, source URLs, and capture timestamps for review before Stage 2 ingestion.
+
+Keep Digital Clone responsible for evidence grading, refinement, negative-space analysis, and verification. Use only public material or consented exports, and do not ingest private DMs, cookies, private-account material, or non-consented personal archives.
+
 ---
 
 ## Quick Start
@@ -158,7 +164,7 @@ Part of the **小试AI** open-source AI workflow:
 | Project | Description |
 |---------|-------------|
 | [recallnest](https://github.com/AliceLJY/recallnest) | MCP memory workbench (LanceDB + Jina v5) |
-| [content-publisher](https://github.com/AliceLJY/content-publisher) | Image generation + layout + WeChat publishing |
+| content-publisher | Image generation + layout + WeChat publishing |
 | [openclaw-tunnel](https://github.com/AliceLJY/openclaw-tunnel) | Docker ↔ host CLI bridge (/cc /codex /gemini) |
 | [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Telegram bots for Claude, Codex, and Gemini |
 | [claude-code-studio](https://github.com/AliceLJY/claude-code-studio) | Multi-session collaboration platform for Claude Code |

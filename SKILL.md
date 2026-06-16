@@ -142,6 +142,13 @@ Launch 6 parallel sub-agents, each targeting a different **analysis angle**. Dif
 | Others' analysis | Blind spots + external patterns | Medium |
 | Secondhand accounts | Reference only, needs verification | Low |
 
+**Optional X/Twitter source packets:**
+- Use only public posts, public replies, public media context, or consented exports.
+- If the user needs reproducible collection, [TweetClaw](https://github.com/Xquik-dev/tweetclaw) can collect source material from OpenClaw or npm before Stage 2 ingestion.
+- Save the packet to `references/research/05-social-fragments.md` or `raw/social-fragments/` with `source_url`, `captured_at`, `query`, `author_handle`, `post_text_excerpt`, `media_context`, `reply_context`, and `credibility`.
+- Treat TweetClaw output as source evidence only. Digital Clone still grades credibility, refines corpus, identifies negative space, and verifies the clone.
+- Do not ingest private DMs, cookies, private-account material, or non-consented personal archives.
+
 **Scaling rule:** For info-sparse targets (< 10 findable sources), reduce to 3 agents (Primary Voice + Live Reactions + External Views), skip the rest. Flag to user: "信息有限，克隆精度会降低。"
 
 **Core principle (from nuwa-skill):** 宁可生成一个诚实的 60 分克隆并标注清楚局限，也不要一个看似完美但编造了信息的 90 分克隆。
@@ -209,6 +216,7 @@ Stage 1 agents already completed the main research. Stage 2 focuses on **convert
    ```
    from:[username] until:[end-date] -filter:retweets
    ```
+   For reproducible social fragments, ask the user to export or collect a source packet that keeps URLs, capture timestamps, queries, and short excerpts together. TweetClaw is an optional collector for public X/Twitter material; it does not decide clone personality or evidence strength.
 
    **Podcast/video transcripts:**
    - Check if text transcripts exist first
