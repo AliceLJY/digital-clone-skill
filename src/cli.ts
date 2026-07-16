@@ -9,7 +9,8 @@ import { join } from "node:path";
 import { loadConfig, expandHome, type CloneConfig } from "./config.js";
 import { ingest, importDir } from "./ingest.js";
 import { refine } from "./refine.js";
-import { assessQuality } from "./quality.js";
+import { assessCorpusReadiness, CORPUS_READINESS_REPORT } from "./readiness.js";
+import { sanitizeSensitiveText } from "./sanitize.js";
 import { generateTestCases, generateDeployGuide } from "./templates.js";
 
 const program = new Command();
@@ -17,7 +18,7 @@ const program = new Command();
 program
   .name("clone")
   .description("Digital Clone — corpus-driven persona toolkit")
-  .version("3.2.0");
+  .version("3.3.0");
 
 // --- init ---
 program
@@ -47,47 +48,61 @@ program
   .description("Scan and collect corpus from configured sources")
   .option("--source <source>", "Source to scan: cc, codex, gemini, memory, articles, all", "all")
   .option("--path <path>", "Override source path (for articles)")
+  .option("--no-raw", "Scan and redact in memory without writing raw corpus artifacts")
   .action((opts) => {
     const config = loadConfig();
-    ensureWorkspace(config);
+    ensureWorkspace(config, { createRaw: opts.raw !== false });
 
     if (opts.path && opts.source === "articles") {
       config.sources.articles = { path: opts.path, enabled: true };
     }
 
     console.log("Ingesting corpus...\n");
-    const summary = ingest(config, opts.source);
+    const summary = ingest(config, opts.source, { writeRaw: opts.raw !== false });
     console.log(`\nDone: ${summary.totalFiles} files, ${summary.totalEntries} entries`);
-    console.log(`Output: ${summary.outputDir}`);
+    console.log(`Sensitive values redacted before write: ${summary.sensitiveValuesRedacted}`);
+    console.log(summary.rawArtifactsWritten
+      ? `Sanitized pre-refinement output: ${summary.outputDir}`
+      : opts.raw === false
+        ? "Raw artifacts: not written (--no-raw)"
+        : "Raw artifacts: not written (no entries)");
   });
 
 // --- import ---
 program
   .command("import <path>")
-  .description("Import external files into raw/ (Mentor Mode)")
-  .action((importPath) => {
+  .description("Import external files as sanitized pre-refinement corpus (Mentor Mode)")
+  .option("--no-raw", "Scan and redact in memory without writing raw corpus artifacts")
+  .action((importPath, opts) => {
     const config = loadConfig();
-    ensureWorkspace(config);
+    ensureWorkspace(config, { createRaw: opts.raw !== false });
 
     console.log(`Importing from ${importPath}...\n`);
-    const summary = importDir(config, importPath);
+    const summary = importDir(config, importPath, { writeRaw: opts.raw !== false });
     console.log(`\nDone: ${summary.totalFiles} files, ${summary.totalEntries} entries`);
+    console.log(`Sensitive values redacted before write: ${summary.sensitiveValuesRedacted}`);
+    console.log(summary.rawArtifactsWritten
+      ? `Sanitized pre-refinement output: ${summary.outputDir}`
+      : opts.raw === false
+        ? "Raw artifacts: not written (--no-raw)"
+        : "Raw artifacts: not written (no entries)");
   });
 
 // --- refine ---
 program
   .command("refine")
   .description("Clean, deduplicate, and sanitize raw corpus")
-  .option("--skip-sanitize", "Skip PII sanitization")
-  .option("--quality-only", "Only generate quality report, no cleaning")
+  .option("--skip-sanitize", "Skip the second sanitization pass (ingest still always redacts before raw writes)")
+  .option("--readiness-only", "Only generate corpus-readiness report, no cleaning")
+  .option("--quality-only", "Deprecated alias for --readiness-only")
   .action((opts) => {
     const config = loadConfig();
 
-    if (opts.qualityOnly) {
-      console.log("Assessing quality...\n");
-      const report = assessQuality(config.workspace);
-      console.log(`\nOverall: ${report.overall.toUpperCase()}`);
-      console.log(`Report: ${config.workspace}/quality-report.md`);
+    if (opts.readinessOnly || opts.qualityOnly) {
+      console.log("Assessing corpus readiness...\n");
+      const report = assessCorpusReadiness(config.workspace);
+      console.log(`\nCorpus readiness: ${report.readiness.toUpperCase()}`);
+      console.log(`Report: ${config.workspace}/${CORPUS_READINESS_REPORT}`);
       return;
     }
 
@@ -99,20 +114,21 @@ program
     console.log(`Output: ${result.outputDir}`);
   });
 
-// --- quality ---
+// --- corpus readiness (quality remains a CLI alias for compatibility) ---
 program
-  .command("quality")
-  .description("Generate corpus quality report")
+  .command("readiness")
+  .alias("quality")
+  .description("Generate corpus-readiness report")
   .action(() => {
     const config = loadConfig();
-    console.log("Assessing quality...\n");
-    const report = assessQuality(config.workspace);
+    console.log("Assessing corpus readiness...\n");
+    const report = assessCorpusReadiness(config.workspace);
     console.log(`Volume: ${report.volume.totalEntries} entries, ~${report.volume.totalTokensEstimate.toLocaleString()} tokens`);
-    console.log(`Purity: ${(report.purity.ratio * 100).toFixed(1)}% first-hand`);
+    console.log(`First-hand share: ${(report.purity.ratio * 100).toFixed(1)}%`);
     console.log(`Coverage: ${report.coverage.topicCount} topics`);
     console.log(`Date range: ${report.recency.dateRange}`);
-    console.log(`\nOverall: ${report.overall.toUpperCase()}`);
-    console.log(`Report: ${config.workspace}/quality-report.md`);
+    console.log(`\nCorpus readiness: ${report.readiness.toUpperCase()}`);
+    console.log(`Report: ${config.workspace}/${CORPUS_READINESS_REPORT}`);
   });
 
 // --- stats ---
@@ -222,14 +238,17 @@ program
         const exportPath = join(refreshDir, `recallnest-${timestamp}.md`);
         try {
           const { execFileSync } = require("node:child_process");
-          execFileSync(
+          const exported = execFileSync(
             recallnestCli,
-            ["export-memories", "--days", days, "--output", exportPath],
-            { stdio: ["ignore", "pipe", "pipe"], timeout: 60000 },
+            ["export-memories", "--days", days],
+            { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"], timeout: 60000 },
           );
-          console.log(`  ✅ 导出到 ${exportPath}`);
+          const sanitized = sanitizeSensitiveText(exported);
+          writeFileSync(exportPath, sanitized.value, "utf-8");
+          console.log(`  ✅ 内存脱敏后导出到 ${exportPath}（${sanitized.count} 处）`);
         } catch (err: any) {
-          console.log(`  ⚠️ RecallNest 导出失败: ${err.message || err}`);
+          const code = err?.code || err?.status || "unknown";
+          console.log(`  ⚠️ RecallNest 导出失败（${code}）；未写入导出文件`);
         }
       } else {
         console.log(`  ⚠️ RecallNest CLI 未找到 (${recallnestCli})，跳过`);
@@ -250,7 +269,8 @@ program
       `- 采集: ${ingestResult.totalFiles} files, ${ingestResult.totalEntries} entries`,
       `- 精炼: ${refineResult.totalInput} → ${refineResult.totalOutput} entries`,
       `- 去重: ${refineResult.duplicatesRemoved}`,
-      `- PII: ${refineResult.piiRedacted} redacted`,
+      `- 采集前置脱敏: ${ingestResult.sensitiveValuesRedacted} redacted`,
+      `- 精炼二次脱敏: ${refineResult.piiRedacted} redacted`,
       ``,
       `## 下一步`,
       ``,
@@ -280,9 +300,9 @@ program
     console.log(`\n📤 下一步: 将 refined/ 文件（排除 *-assistant.md）上传到分身语料库`);
   });
 
-function ensureWorkspace(config: CloneConfig) {
+function ensureWorkspace(config: CloneConfig, options: { createRaw?: boolean } = {}) {
   mkdirSync(config.workspace, { recursive: true });
-  mkdirSync(join(config.workspace, "raw"), { recursive: true });
+  if (options.createRaw !== false) mkdirSync(join(config.workspace, "raw"), { recursive: true });
 }
 
 program.parse();

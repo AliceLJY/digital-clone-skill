@@ -24,8 +24,8 @@ Skill 引导你走完 6 阶段流程，全程对话式——不需要任何运�
 | 阶段 | 名称 | 做什么 |
 |------|------|--------|
 | 1 | 目标画像 | 确定克隆目标，盘点数据源 |
-| 2 | 语料搜集 | 采集原始语料（对话记录、文章、调研） |
-| 3 | 语料清洗 | 清洗、去重、PII 脱敏、质量评估 |
+| 2 | 语料搜集 | 采集已做隐私脱敏的语料（对话记录、文章、调研） |
+| 3 | 语料清洗 | 清洗、去重、二次脱敏、语料就绪度评估 |
 | 4 | 灵魂锻造 | 提取人格，生成 System Prompt |
 | 5 | 验证测试 | 陷阱问题测试，附通过标准（目标：≥80%） |
 | 6 | 部署上线 | 平台部署指南（NotebookLM / bot / 通用 LLM） |
@@ -70,18 +70,20 @@ bun install
 bun run src/cli.ts init --target "你的名字" --mode self
 bun run src/cli.ts ingest --source all
 bun run src/cli.ts refine
-bun run src/cli.ts quality
+bun run src/cli.ts readiness
 ```
 
 **重要：** workspace 路径相对于运行命令的目录。如果用 CLI 预处理，请在同一目录启动 Claude Code 会话，Skill 才能找到 `./clone-workspace/`。清洗后的语料会区分 `*-user.md`（你的原声——用于人格提取）和 `*-assistant.md`（AI 回复——仅作参考，不进灵魂锻造）。
 
+**隐私边界：** ingest/import 会先在内存中对常见敏感值做尽力脱敏，再首次写入 `raw/*.jsonl`；不会先写一份未过滤副本、再覆盖它。`raw/` 仍包含私人对话正文，规则也不可能识别所有凭证和个人信息，分享或上传前必须人工检查。加 `--no-raw` 可只扫描和报告，完全不生成 raw 语料文件。refine 仍会对旧文件或手动放入的文件再做一次脱敏，原始源文件不会被修改。
+
 | 命令 | 说明 |
 |------|------|
 | `bun run src/cli.ts init` | 初始化工作区和配置 |
-| `bun run src/cli.ts ingest --source <src>` | 扫描语料（cc, codex, gemini, memory, articles, all） |
-| `bun run src/cli.ts import <path>` | 导入外部文件（Mentor Mode） |
+| `bun run src/cli.ts ingest --source <src> [--no-raw]` | 扫描语料，写入前脱敏，也可完全不写 raw 文件 |
+| `bun run src/cli.ts import <path> [--no-raw]` | 按同样的隐私规则导入外部文件（Mentor Mode） |
 | `bun run src/cli.ts refine` | 清洗、去重、脱敏 |
-| `bun run src/cli.ts quality` | 生成质量报告 |
+| `bun run src/cli.ts readiness` | 生成语料就绪度报告 |
 | `bun run src/cli.ts stats` | 显示语料统计 |
 | `bun run src/cli.ts verify-template` | 生成测试用例模板 |
 | `bun run src/cli.ts deploy-guide --platform <p>` | 生成部署指南 |
@@ -89,16 +91,19 @@ bun run src/cli.ts quality
 
 设置 `CLONE_WORKSPACE` 环境变量可以把 workspace 固定到一个路径，让 CLI 和 Skill 会话共享。
 
-> `refresh` 可以顺带从 [RecallNest](https://github.com/AliceLJY/recallnest) 导出近期记忆（作者自己的记忆系统；设 `RECALLNEST_CLI` 或安装在 `~/recallnest/lm`）。没装的话用 `--skip-recallnest`。
+`bun run src/cli.ts quality` 作为 `readiness` 的兼容别名继续可用；输出和报告统一使用“语料就绪度”，因为这些指标衡量的是语料是否充分，不是分身质量。
+
+> `refresh` 可以顺带从 [RecallNest](https://github.com/AliceLJY/recallnest) 导出近期记忆（作者自己的记忆系统；设 `RECALLNEST_CLI` 或安装在 `~/recallnest/lm`）。导出内容会先从 stdout 捕获到内存并完成脱敏，再首次写入 `refreshed/`。没装的话用 `--skip-recallnest`。
 
 <details>
-<summary><strong>MCP 工具（5 个，同样需要 Bun）</strong></summary>
+<summary><strong>MCP 工具（共 6 个，含一个兼容别名，同样需要 Bun）</strong></summary>
 
 | 工具 | 说明 |
 |------|------|
 | `clone_ingest` | 扫描和采集语料 |
 | `clone_refine` | 清洗和去重 |
-| `clone_quality` | 评估语料质量 |
+| `clone_corpus_readiness` | 评估语料是否足以进入人格提取 |
+| `clone_quality` | `clone_corpus_readiness` 的弃用兼容别名 |
 | `clone_stats` | 显示统计 |
 | `clone_read_corpus` | 读取清洗后的语料片段（默认只取 user 侧文本） |
 
@@ -128,8 +133,10 @@ bun run src/cli.ts quality
 | `src/mcp-server.ts` | 可选 MCP 工具（Bun） |
 | `src/parsers.ts` | 多源 transcript 解析 |
 | `src/ingest.ts` | 语料采集管道 |
-| `src/refine.ts` | 去重 + PII 脱敏 + 格式统一 |
-| `src/quality.ts` | 质量评估 + 报告 |
+| `src/sanitize.ts` | 写入前共用的敏感信息脱敏 |
+| `src/refine.ts` | 全文哈希去重 + 二次脱敏 + 格式统一 |
+| `src/readiness.ts` | 语料就绪度评估 + 报告 |
+| `src/quality.ts` | 弃用 API 兼容层 |
 | `src/templates.ts` | 验证和部署模板生成 |
 | `src/config.ts` | 配置管理 |
 
@@ -158,7 +165,7 @@ bun run src/cli.ts quality
 | 项目 | 简介 |
 |------|------|
 | [recallnest](https://github.com/AliceLJY/recallnest) | MCP 记忆工作台（LanceDB + Jina v5） |
-| [content-publisher](https://github.com/AliceLJY/content-publisher) | 配图 + 排版 + 公众号发布 |
+| content-publisher（私有仓） | 配图 + 排版 + 公众号发布 |
 | [openclaw-tunnel](https://github.com/AliceLJY/openclaw-tunnel) | Docker ↔ 宿主机 CLI 桥（/cc /codex /gemini） |
 | [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Claude / Codex / Gemini 的 Telegram bot |
 | [claude-code-studio](https://github.com/AliceLJY/claude-code-studio) | Claude Code 多会话协作平台 |

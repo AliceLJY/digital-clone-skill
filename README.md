@@ -24,8 +24,8 @@ The Skill walks you through a 6-stage pipeline, entirely conversational — no r
 | Stage | Name | What Happens |
 |-------|------|--------------|
 | 1 | Target Profiling | Identify the clone target and map data sources |
-| 2 | Data Hunting | Collect raw corpus (transcripts, articles, research) |
-| 3 | Data Refining | Clean, dedup, PII sanitization, quality assessment |
+| 2 | Data Hunting | Collect privacy-sanitized corpus (transcripts, articles, research) |
+| 3 | Data Refining | Clean, dedup, second-pass sanitization, corpus-readiness assessment |
 | 4 | Soul Forging | Extract personality, generate System Prompt |
 | 5 | Verification | Trap-question testing with pass criteria (target: ≥80%) |
 | 6 | Deployment | Platform-specific deploy guide (NotebookLM / bot / generic LLM) |
@@ -70,18 +70,20 @@ bun install
 bun run src/cli.ts init --target "Your Name" --mode self
 bun run src/cli.ts ingest --source all
 bun run src/cli.ts refine
-bun run src/cli.ts quality
+bun run src/cli.ts readiness
 ```
 
 **Important:** the workspace path is relative to where you run the commands. If you preprocess with the CLI, start your Claude Code session in the same directory so the Skill finds `./clone-workspace/`. The refined corpus separates `*-user.md` (your voice — used for personality extraction) from `*-assistant.md` (AI replies — reference only, excluded from Soul Forging).
 
+**Privacy boundary:** ingest/import applies best-effort sensitive-value redaction in memory before the first `raw/*.jsonl` write; it never writes an unfiltered copy and then overwrites it. Persisted `raw/` files still contain private conversation text and redaction cannot recognize every credential or personal detail, so inspect them before sharing or uploading. Add `--no-raw` to scan and report without writing any raw corpus artifact. Refinement performs a second sanitization pass for legacy or manually supplied files. Original source files are never modified.
+
 | Command | Description |
 |---------|-------------|
 | `bun run src/cli.ts init` | Initialize workspace and config |
-| `bun run src/cli.ts ingest --source <src>` | Scan corpus (cc, codex, gemini, memory, articles, all) |
-| `bun run src/cli.ts import <path>` | Import external files (Mentor Mode) |
+| `bun run src/cli.ts ingest --source <src> [--no-raw]` | Scan corpus, redact before writing, optionally write nothing |
+| `bun run src/cli.ts import <path> [--no-raw]` | Import external files with the same privacy behavior (Mentor Mode) |
 | `bun run src/cli.ts refine` | Clean, dedup, sanitize |
-| `bun run src/cli.ts quality` | Generate quality report |
+| `bun run src/cli.ts readiness` | Generate corpus-readiness report |
 | `bun run src/cli.ts stats` | Show corpus statistics |
 | `bun run src/cli.ts verify-template` | Generate test case template |
 | `bun run src/cli.ts deploy-guide --platform <p>` | Generate deployment guide |
@@ -89,16 +91,19 @@ bun run src/cli.ts quality
 
 Set `CLONE_WORKSPACE` to pin the workspace to a fixed path shared between CLI and Skill sessions.
 
-> `refresh` can optionally pull recent memories from a [RecallNest](https://github.com/AliceLJY/recallnest) install (the author's memory system; set `RECALLNEST_CLI` or place it at `~/recallnest/lm`). Without it, use `--skip-recallnest`.
+`bun run src/cli.ts quality` remains a compatibility alias for `readiness`; output and report naming use corpus readiness because these signals measure corpus sufficiency, not clone quality.
+
+> `refresh` can optionally pull recent memories from a [RecallNest](https://github.com/AliceLJY/recallnest) install (the author's memory system; set `RECALLNEST_CLI` or place it at `~/recallnest/lm`). The export is captured from stdout, sanitized in memory, and only then written to `refreshed/`. Without RecallNest, use `--skip-recallnest`.
 
 <details>
-<summary><strong>MCP Tools (5 tools, also requires Bun)</strong></summary>
+<summary><strong>MCP Tools (6 including one compatibility alias, also requires Bun)</strong></summary>
 
 | Tool | Description |
 |------|-------------|
 | `clone_ingest` | Scan and collect corpus |
 | `clone_refine` | Clean and deduplicate |
-| `clone_quality` | Assess corpus quality |
+| `clone_corpus_readiness` | Assess corpus sufficiency for personality extraction |
+| `clone_quality` | Deprecated compatibility alias for `clone_corpus_readiness` |
 | `clone_stats` | Show statistics |
 | `clone_read_corpus` | Read refined corpus slices (defaults to user-side text) |
 
@@ -128,8 +133,10 @@ Set `CLONE_WORKSPACE` to pin the workspace to a fixed path shared between CLI an
 | `src/mcp-server.ts` | Optional MCP tools (Bun) |
 | `src/parsers.ts` | Multi-source transcript parsing |
 | `src/ingest.ts` | Corpus collection pipeline |
-| `src/refine.ts` | Dedup + PII sanitize + normalize |
-| `src/quality.ts` | Quality assessment + report |
+| `src/sanitize.ts` | Shared pre-write sensitive-data redaction |
+| `src/refine.ts` | Full-content hash dedup + second-pass sanitize + normalize |
+| `src/readiness.ts` | Corpus-readiness assessment + report |
+| `src/quality.ts` | Deprecated API compatibility shim |
 | `src/templates.ts` | Verify + deploy template generation |
 | `src/config.ts` | Configuration management |
 
@@ -158,7 +165,7 @@ Part of the **小试AI** open-source AI workflow:
 | Project | Description |
 |---------|-------------|
 | [recallnest](https://github.com/AliceLJY/recallnest) | MCP memory workbench (LanceDB + Jina v5) |
-| [content-publisher](https://github.com/AliceLJY/content-publisher) | Image generation + layout + WeChat publishing |
+| content-publisher (private) | Image generation + layout + WeChat publishing |
 | [openclaw-tunnel](https://github.com/AliceLJY/openclaw-tunnel) | Docker ↔ host CLI bridge (/cc /codex /gemini) |
 | [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Telegram bots for Claude, Codex, and Gemini |
 | [claude-code-studio](https://github.com/AliceLJY/claude-code-studio) | Multi-session collaboration platform for Claude Code |

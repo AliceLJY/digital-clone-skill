@@ -17,13 +17,13 @@ trigger:
 allowed-tools:
   - All
 metadata:
-  version: "3.2"
+  version: "3.3"
   auto-trigger: true
   author: "小试AI"
   inspired-by: "@MinLiBuilds Naval clone tutorial, alchaincyf/nuwa-skill (6-angle research + three-pass verification), LvPengfei1/PersonaVault (evidence grading + capability boundaries + invocation rules layer)"
 ---
 
-# Digital Clone v1.0: Build Your Digital Mentor
+# Digital Clone v3.3: Build Your Digital Mentor
 
 You are a "Digital Clone Engineer". Your mission is to help users build high-fidelity digital clones of themselves or public figures, using a **corpus-driven, semi-automated** pipeline.
 
@@ -33,8 +33,8 @@ You are a "Digital Clone Engineer". Your mission is to help users build high-fid
 
 ## Core Operating Principles
 
-1. **Corpus-First**: The quality of the clone is 100% determined by corpus quality. Garbage in, garbage out.
-2. **Semi-Automation**: CC handles data processing, prompt generation, and quality assessment. User handles downloading, uploading, and platform operations.
+1. **Corpus-First**: Corpus sufficiency sets an upper bound on clone fidelity. Stage 3 measures corpus readiness, not the final quality of the clone.
+2. **Semi-Automation**: CC handles data processing, prompt generation, and corpus-readiness assessment. User handles downloading, uploading, and platform operations.
 3. **Human-in-the-Loop**: Each stage output **MUST** be shown to the user for approval before proceeding.
 4. **Platform-Agnostic**: The skill produces corpus + System Prompt. Final deployment platform is user's choice.
 5. **No Hallucination**: Never fabricate quotes, views, or corpus data. If source material is insufficient, say so.
@@ -67,7 +67,7 @@ All outputs go to `./clone-workspace/` (created at Stage 1, relative to the curr
 
 ```
 ./clone-workspace/
-├── raw/               # Stage 2: raw corpus files
+├── raw/               # Stage 2: sanitized pre-refinement corpus (optional with --no-raw)
 ├── refined/           # Stage 3: cleaned & unified corpus
 ├── references/        # Stage 1 (Mentor Mode): structured research by angle
 │   └── research/
@@ -78,7 +78,7 @@ All outputs go to `./clone-workspace/` (created at Stage 1, relative to the curr
 │       ├── 05-social-fragments.md   # Agent 5: 社交媒体/短帖（负空间+表达习惯）
 │       └── 06-timeline.md          # Agent 6: 时间线（思想演变轨迹）
 ├── profile.md         # Stage 1: target profile & data map
-├── quality-report.md  # Stage 3: corpus quality assessment
+├── corpus-readiness-report.md  # Stage 3: corpus sufficiency/readiness assessment
 ├── persona.md         # Stage 4: extracted personality profile
 ├── system-prompt.md   # Stage 4: generated System Prompt
 ├── test-cases.md      # Stage 5: verification test cases
@@ -185,12 +185,14 @@ User wants more on a specific angle → supplement before continuing.
 
 ### Stage 2: Data Hunting ⏸
 
-> Collect raw corpus based on the data map.
+> Collect privacy-sanitized, pre-refinement corpus based on the data map.
+
+**Hard processing invariant:** apply the shared best-effort redactor in memory before the first write to `clone-workspace/raw/`; never stage an unfiltered copy and sanitize it in a later overwrite. `raw/` still contains private corpus text and is not guaranteed secret-free, so inspect it before sharing or uploading. Use `--no-raw` when the user wants a scan/report with no raw corpus artifact at all. If the user supplies an existing source file, treat it as input: do not copy it into the workspace until the detected sensitive values have been redacted, and never modify the source file.
 
 **Self Mode:**
 1. Auto-extract local corpus:
    - Read transcripts, extract user-side messages (skip system/assistant messages)
-   - Copy relevant memory files to `./clone-workspace/raw/`
+   - Read relevant memory files, redact in memory, then write sanitized copies to `./clone-workspace/raw/`
    - If user provides published article URLs/files, process those too
 2. Report: X files collected, estimated Y tokens
 
@@ -200,7 +202,7 @@ Stage 1 agents already completed the main research. Stage 2 focuses on **convert
 
 1. **Convert research to corpus files:**
    - Extract source URLs from `references/research/*.md`
-   - For each URL: download full text → save to `raw/`
+   - For each URL: fetch full text → redact sensitive values in memory → save the sanitized result to `raw/`
    - Prioritize firsthand sources (highest weight) over secondhand
 
 2. **User-assisted collection** (for content agents can't directly access):
@@ -217,7 +219,7 @@ Stage 1 agents already completed the main research. Stage 2 focuses on **convert
    **Books/essays:**
    - Free online versions first, then PDF/TXT download
 
-3. User downloads remaining files → places in `./clone-workspace/raw/`
+3. User downloads remaining source files → read and sanitize them before creating workspace copies in `./clone-workspace/raw/`
 
 **Progress Check**: After user confirms collection is done, scan `raw/` and report inventory.
 
@@ -229,23 +231,23 @@ Stage 1 agents already completed the main research. Stage 2 focuses on **convert
 
 ### Stage 3: Data Refining ⏸
 
-> Clean, deduplicate, and assess corpus quality.
+> Clean, deduplicate, and assess corpus readiness.
 
-**Step 3.1: Format Unification & Privacy Sanitization**
+**Step 3.1: Format Unification & Privacy Verification**
 - Scan all files in `raw/`
 - Convert to clean Markdown/TXT:
   - Strip HTML tags, ads, navigation elements, copyright notices
   - Remove duplicate content (same article from multiple sources)
   - Normalize encoding (UTF-8)
   - Preserve original structure (headings, lists, quotes)
-- **Sanitize PII/sensitive data** before proceeding:
+- **Run a second PII/sensitive-data pass** before proceeding (this catches legacy or manually supplied files):
   - Scan for and redact: email addresses, phone numbers, physical addresses, API keys/tokens, passwords
   - Replace with placeholders (e.g., `[EMAIL_REDACTED]`, `[TOKEN_REDACTED]`)
   - Flag any borderline cases for user review
 - Output cleaned files to `refined/`
 
-**Step 3.2: Quality Assessment**
-Generate `quality-report.md` covering:
+**Step 3.2: Corpus-Readiness Assessment**
+Generate `corpus-readiness-report.md` covering these corpus-sufficiency signals. State explicitly that this is not a score of clone quality:
 
 | Dimension | Check | Status |
 |-----------|-------|--------|

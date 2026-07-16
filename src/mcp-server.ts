@@ -3,7 +3,7 @@
  * Digital Clone MCP Server
  *
  * Exposes corpus management tools so any MCP-compatible AI client
- * can drive the data pipeline (ingest, refine, quality).
+ * can drive the data pipeline (ingest, refine, corpus readiness).
  * Soul Forging stays in the Skill — tools handle the mechanical work.
  */
 
@@ -11,9 +11,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { loadConfig } from "./config.js";
-import { ingest, importDir } from "./ingest.js";
+import { ingest } from "./ingest.js";
 import { refine } from "./refine.js";
-import { assessQuality } from "./quality.js";
+import { assessCorpusReadiness, type CorpusReadinessReport } from "./readiness.js";
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -21,7 +21,7 @@ const config = loadConfig();
 
 const server = new McpServer({
   name: "digital-clone",
-  version: "3.2.0",
+  version: "3.3.0",
 });
 
 // --- clone_ingest ---
@@ -30,11 +30,18 @@ server.tool(
   "Scan and collect corpus from configured sources (cc, codex, gemini, memory, articles, or all)",
   {
     source: z.enum(["cc", "codex", "gemini", "memory", "articles", "all"]).default("all").describe("Source to scan"),
+    no_raw: z.boolean().default(false).describe("Redact in memory and do not write raw corpus artifacts"),
   },
-  async ({ source }) => {
-    const summary = ingest(config, source);
+  async ({ source, no_raw }) => {
+    const summary = ingest(config, source, { writeRaw: !no_raw });
     const lines = [
       `Ingest complete: ${summary.totalFiles} files, ${summary.totalEntries} entries`,
+      `Sensitive values redacted before write: ${summary.sensitiveValuesRedacted}`,
+      summary.rawArtifactsWritten
+        ? `Sanitized pre-refinement output: ${summary.outputDir}`
+        : no_raw
+          ? "Raw artifacts: not written (no_raw=true)"
+          : "Raw artifacts: not written (no entries)",
       "",
       "By source:",
       ...Object.entries(summary.sources).map(([src, data]) =>
@@ -50,7 +57,7 @@ server.tool(
   "clone_refine",
   "Clean, deduplicate, and sanitize raw corpus. Run after ingest.",
   {
-    skip_sanitize: z.boolean().default(false).describe("Skip PII sanitization (useful for own corpus)"),
+    skip_sanitize: z.boolean().default(false).describe("Skip the second sanitization pass; ingest always redacts before raw writes"),
   },
   async ({ skip_sanitize }) => {
     const result = refine(config.workspace, { skipSanitize: skip_sanitize });
@@ -67,27 +74,36 @@ server.tool(
   },
 );
 
-// --- clone_quality ---
+function readinessResult(report: CorpusReadinessReport) {
+  return {
+    content: [{
+      type: "text" as const,
+      text: [
+        `Corpus readiness: ${report.readiness.toUpperCase()}`,
+        `Volume: ${report.volume.totalEntries} entries, ~${report.volume.totalTokensEstimate.toLocaleString()} tokens`,
+        `First-hand share: ${(report.purity.ratio * 100).toFixed(1)}%`,
+        `Coverage: ${report.coverage.topicCount} topics`,
+        `Date range: ${report.recency.dateRange}`,
+        report.coverage.blindSpots.length > 0 ? `Blind spots: ${report.coverage.blindSpots.join(", ")}` : "",
+      ].filter(Boolean).join("\n"),
+    }],
+  };
+}
+
+// --- clone_corpus_readiness ---
+server.tool(
+  "clone_corpus_readiness",
+  "Assess corpus sufficiency and generate corpus-readiness-report.md (not a clone-quality score)",
+  {},
+  async () => readinessResult(assessCorpusReadiness(config.workspace)),
+);
+
+// Compatibility alias for existing MCP clients.
 server.tool(
   "clone_quality",
-  "Assess corpus quality and generate quality-report.md",
+  "Deprecated alias for clone_corpus_readiness; returns corpus-readiness labels",
   {},
-  async () => {
-    const report = assessQuality(config.workspace);
-    return {
-      content: [{
-        type: "text" as const,
-        text: [
-          `Quality: ${report.overall.toUpperCase()}`,
-          `Volume: ${report.volume.totalEntries} entries, ~${report.volume.totalTokensEstimate.toLocaleString()} tokens`,
-          `Purity: ${(report.purity.ratio * 100).toFixed(1)}% first-hand`,
-          `Coverage: ${report.coverage.topicCount} topics`,
-          `Date range: ${report.recency.dateRange}`,
-          report.coverage.blindSpots.length > 0 ? `Blind spots: ${report.coverage.blindSpots.join(", ")}` : "",
-        ].filter(Boolean).join("\n"),
-      }],
-    };
-  },
+  async () => readinessResult(assessCorpusReadiness(config.workspace)),
 );
 
 // --- clone_stats ---
