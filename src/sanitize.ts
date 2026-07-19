@@ -36,8 +36,11 @@ const SENSITIVE_PATTERNS: Array<{ regex: RegExp; replacement: string }> = [
     replacement: "[SECRET_REDACTED]",
   },
   { regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, replacement: "[EMAIL_REDACTED]" },
-  { regex: /(?:1[3-9]\d{9})/g, replacement: "[PHONE_REDACTED]" },
-  { regex: /(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, replacement: "[PHONE_REDACTED]" },
+  { regex: /(?<!\d)1[3-9]\d{9}(?!\d)/g, replacement: "[PHONE_REDACTED]" },
+  {
+    regex: /(?<!\d)(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}(?!\d)/g,
+    replacement: "[PHONE_REDACTED]",
+  },
   {
     regex: /\b\d{1,5}\s+[\w\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Court|Ct)\b/gi,
     replacement: "[ADDRESS_REDACTED]",

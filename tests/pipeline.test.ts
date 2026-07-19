@@ -17,7 +17,8 @@ import {
   CORPUS_READINESS_REPORT,
 } from "../src/readiness.js";
 import { assessQuality } from "../src/quality.js";
-import { sanitizeCorpusEntry } from "../src/sanitize.js";
+import { sanitizeCorpusEntry, sanitizeSensitiveText } from "../src/sanitize.js";
+import { generateDeployGuide, generateTestCases } from "../src/templates.js";
 
 const fixturesDir = join(import.meta.dir, "fixtures");
 
@@ -132,6 +133,35 @@ describe("privacy-safe ingest", () => {
 
     expect(result.value.sessionId).toBe("[GITHUB_TOKEN_REDACTED]");
     expect(result.value.file).toBe("[EMAIL_REDACTED]");
+  });
+
+  test("does not redact phone-shaped substrings inside longer numeric identifiers", () => {
+    const text = "timestamp=1758176000000 order=1380013800012";
+    const result = sanitizeSensitiveText(text);
+
+    expect(result.value).toBe(text);
+    expect(result.count).toBe(0);
+  });
+
+  test("still redacts standalone Chinese and North American phone numbers", () => {
+    const result = sanitizeSensitiveText("call 13800138000 or +1 (415) 555-2671");
+
+    expect(result.value).toBe("call [PHONE_REDACTED] or [PHONE_REDACTED]");
+    expect(result.count).toBe(2);
+  });
+});
+
+describe("template generation", () => {
+  test("creates an uninitialized workspace before writing templates", () => {
+    const parent = mkdtempSync(join(tmpdir(), "digital-clone-templates-"));
+    const testWorkspace = join(parent, "tests-not-yet-initialized", "clone-workspace");
+    const deployWorkspace = join(parent, "deploy-not-yet-initialized", "clone-workspace");
+
+    const testCases = generateTestCases(testWorkspace, "Test Target");
+    const deployGuide = generateDeployGuide(deployWorkspace, "Test Target", "generic");
+
+    expect(existsSync(testCases)).toBe(true);
+    expect(existsSync(deployGuide)).toBe(true);
   });
 });
 

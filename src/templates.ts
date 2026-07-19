@@ -2,7 +2,7 @@
  * Templates — generate verification test cases and deployment guides.
  */
 
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 export function generateTestCases(workspaceDir: string, targetName: string): string {
@@ -48,6 +48,7 @@ Pass rate: ___ / 7
 `;
 
   const outPath = join(workspaceDir, "test-cases.md");
+  mkdirSync(workspaceDir, { recursive: true });
   writeFileSync(outPath, content, "utf-8");
   return outPath;
 }
@@ -117,6 +118,7 @@ Paste \`system-prompt.md\` as the system instruction or first message.
 
   const content = guides[platform] || guides.generic;
   const outPath = join(workspaceDir, "deploy-guide.md");
+  mkdirSync(workspaceDir, { recursive: true });
   writeFileSync(outPath, content, "utf-8");
   return outPath;
 }
