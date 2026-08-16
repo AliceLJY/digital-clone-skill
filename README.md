@@ -149,7 +149,7 @@ Set `CLONE_WORKSPACE` to pin the workspace to a fixed path shared between CLI an
 | Source | Contribution |
 |--------|-------------|
 | Claude Code | Foundation, CLI, MCP server, parsers |
-| [RecallNest](https://github.com/AliceLJY/recallnest) | Parser architecture for CC/Codex/Gemini transcripts |
+| [RecallNest](https://github.com/AliceLJY/recallnest) | Parser architecture for CC/Codex/Kimi/Agy transcripts |
 | [@MinLiBuilds](https://x.com/MinLiBuilds) | Naval clone tutorial — original inspiration |
 | alchaincyf/nuwa-skill | 6-angle research + three-pass verification |
 | LvPengfei1/PersonaVault | Evidence grading + capability boundaries |
@@ -166,10 +166,10 @@ Part of the **小试AI** open-source AI workflow:
 |---------|-------------|
 | [recallnest](https://github.com/AliceLJY/recallnest) | MCP memory workbench (LanceDB + Jina v5) |
 | content-publisher (private) | Image generation + layout + WeChat publishing |
-| [openclaw-tunnel](https://github.com/AliceLJY/openclaw-tunnel) | Docker ↔ host CLI bridge (/cc /codex /gemini) |
-| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Telegram bots for Claude, Codex, and Gemini |
+| [openclaw-tunnel](https://github.com/AliceLJY/openclaw-tunnel) | Docker ↔ host CLI bridge (/cc /codex) |
+| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Telegram bots for Claude, Codex, Agy, and Kimi |
 | [claude-code-studio](https://github.com/AliceLJY/claude-code-studio) | Multi-session collaboration platform for Claude Code |
-| [cc-empire](https://github.com/AliceLJY/cc-empire) | Complete Claude Code workflow scaffold (rules + hooks + agents) |
+| cc-empire *(private)* | Complete Claude Code workflow scaffold (rules + hooks + agents) |
 | [etwin-bot](https://github.com/AliceLJY/etwin-bot) | E-Twin Telegram bot — this skill's 1:1 instantiation as a runnable bot |
 | [trio-handoff](https://github.com/AliceLJY/trio-handoff) | Bidirectional handoff bundles for AI coding agents |
 
