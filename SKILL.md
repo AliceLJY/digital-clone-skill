@@ -17,7 +17,7 @@ trigger:
 allowed-tools:
   - All
 metadata:
-  version: "3.3"
+  version: "3.3.0"
   auto-trigger: true
   author: "小试AI"
   inspired-by: "@MinLiBuilds Naval clone tutorial, alchaincyf/nuwa-skill (6-angle research + three-pass verification), LvPengfei1/PersonaVault (evidence grading + capability boundaries + invocation rules layer)"
