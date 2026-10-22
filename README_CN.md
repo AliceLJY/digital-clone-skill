@@ -21,6 +21,8 @@
 
 ## 它能做什么
 
+**适合谁：** 手里有大量自己写的文字和 AI 对话、想要一个*写作风格校准器*——一份按自己的方式回答问题的 System Prompt——而不是又一个通用助手的人。作者本人就是这样用的，第一个克隆对象就是她自己。目前外部使用者很少。来龙去脉见 [docs/story.md](docs/story.md)。
+
 Skill 引导你走完 6 阶段流程，全程对话式——不需要任何运行时依赖：
 
 | 阶段 | 名称 | 做什么 |
@@ -67,13 +69,15 @@ Skill 会逐阶段对话式推进，每一步都等你确认。所有产出落�
 ```bash
 git clone https://github.com/AliceLJY/digital-clone-skill.git
 cd digital-clone-skill
-bun install
+bun install   # 也可以 npm ci（CI 用仓库里的 package-lock.json）；CLI 本身仍须在 Bun 下运行
 
 bun run src/cli.ts init --target "你的名字" --mode self
 bun run src/cli.ts ingest --source all
 bun run src/cli.ts refine
 bun run src/cli.ts readiness
 ```
+
+![在四篇虚构样例文章上跑一遍 CLI：邮箱在第一次写盘前就被替换；四篇短文远远不够，所以就绪度评估给出 INSUFFICIENT。](docs/assets/cli-sample-run.png)
 
 **重要：** workspace 路径相对于运行命令的目录。如果用 CLI 预处理，请在同一目录启动 Claude Code 会话，Skill 才能找到 `./clone-workspace/`。清洗后的语料会区分 `*-user.md`（你的原声——用于人格提取）和 `*-assistant.md`（AI 回复——仅作参考，不进灵魂锻造）。
 
@@ -90,6 +94,21 @@ bun run src/cli.ts readiness
 | `bun run src/cli.ts verify-template` | 生成测试用例模板 |
 | `bun run src/cli.ts deploy-guide --platform <p>` | 生成部署指南 |
 | `bun run src/cli.ts refresh` | 重扫数据源，把新内容合并进清洗后的语料 |
+
+
+### 支持的语料来源
+
+`ingest --source <src>` 内置以下解析器：
+
+| 来源 | 读取 | 说明 |
+|------|------|------|
+| `cc` | Claude Code 对话记录（`~/.claude/projects`） | 自动探测 |
+| `codex` | Codex CLI 会话（`~/.codex/sessions`） | |
+| `gemini` | Gemini CLI 历史文件（`~/.gemini/tmp`） | 只能读旧历史——Google 已于 2026-06-18 停止个人账号的 Gemini CLI |
+| `memory` | Claude Code 记忆文件（`~/.claude/projects/*/memory`） | 自动探测 |
+| `articles` | 你自己写的 `.md` / `.txt` / `.html` 文章目录 | 默认关闭，需在 `config.json`（`init` 生成）或 `~/.config/digital-clone/config.json` 里设 `sources.articles.path` 并启用 |
+
+Kimi、Antigravity、ChatGPT 等工具没有内置解析器。把这些对话导出成 `.md` / `.txt` / `.html`，再用 `import <path>` 导入。`refresh` 还可以从 RecallNest 拉取近期记忆（见下文）。
 
 设置 `CLONE_WORKSPACE` 环境变量可以把 workspace 固定到一个路径，让 CLI 和 Skill 会话共享。
 
@@ -159,6 +178,8 @@ bun run src/cli.ts readiness
 ## 作者
 
 作者是 **小试AI**（[@AliceLJY](https://github.com/AliceLJY)），公众号为 **我的AI小木屋**。
+
+<img src="./assets/wechat_qr.jpg" width="200" alt="微信公众号二维码">
 
 ## 生态
 

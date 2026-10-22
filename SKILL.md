@@ -5,15 +5,7 @@ description: |
   Stages: Target Profiling → Data Hunting → Data Refining → Soul Forging → Verification → Deployment.
   Supports two modes: Self Mode (clone yourself) and Mentor Mode (clone a public figure).
   Do NOT use for: 聊天机器人通用配置（不在本 skill 范围）, 风格迁移/文案仿写, 仅需语料清洗不需完整克隆
-measurable_outcome: "System prompt 产出 + 验证对话通过 3 轮一致性测试"
-trigger:
-  - "克隆"
-  - "数字分身"
-  - "digital clone"
-  - "数字导师"
-  - "克隆自己"
-  - "克隆.*导师"
-  - "clone"
+measurable_outcome: "System prompt 产出 + 验证测试通过率 ≥80%"
 allowed-tools:
   - All
 metadata:
@@ -537,7 +529,7 @@ Generate `deploy-guide.md` based on the user's platform choice:
 
 ## Step 3: Test & Share
 1. Run the test cases from `test-cases.md`
-2. If pass rate > 80%, the clone is ready
+2. If pass rate ≥ 80%, the clone is ready
 3. Share the Gem link (note: NotebookLM-linked Gems may have sharing bugs)
 ```
 

@@ -78,7 +78,7 @@ export function generateDeployGuide(
 ## Step 3: Verify
 
 1. Run the test cases from \`test-cases.md\`
-2. If pass rate >= 80% (6/7), the clone is ready
+2. If pass rate ≥ 80% (e.g. 6/7), the clone is ready
 3. Share the Gem link
 `,
     ccbot: `# Deployment Guide: ${targetName} (Self-hosted Chat Bot)

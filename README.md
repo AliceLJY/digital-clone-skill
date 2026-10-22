@@ -21,6 +21,8 @@ A Claude Code Skill that turns conversation history and writings into a digital 
 
 ## What It Does
 
+**Who it's for:** people with a large body of their own writing and AI conversations who want a *style calibrator* — a system prompt that answers the way they would — rather than another generic assistant. That is how the author used it, with herself as the first clone target. Outside users have been rare so far. The longer back story is in [docs/story.md](docs/story.md) (Chinese).
+
 The Skill walks you through a 6-stage pipeline, entirely conversational — no runtime dependencies required:
 
 | Stage | Name | What Happens |
@@ -67,13 +69,15 @@ For large corpora (thousands of transcript files), the CLI does the mechanical w
 ```bash
 git clone https://github.com/AliceLJY/digital-clone-skill.git
 cd digital-clone-skill
-bun install
+bun install   # or: npm ci (CI uses the committed package-lock.json); the CLI itself still runs under Bun
 
 bun run src/cli.ts init --target "Your Name" --mode self
 bun run src/cli.ts ingest --source all
 bun run src/cli.ts refine
 bun run src/cli.ts readiness
 ```
+
+![CLI run on a four-article fictional sample: an email address is redacted before the first write, and the readiness check reports INSUFFICIENT because four short articles are far too little corpus.](docs/assets/cli-sample-run.png)
 
 **Important:** the workspace path is relative to where you run the commands. If you preprocess with the CLI, start your Claude Code session in the same directory so the Skill finds `./clone-workspace/`. The refined corpus separates `*-user.md` (your voice — used for personality extraction) from `*-assistant.md` (AI replies — reference only, excluded from Soul Forging).
 
@@ -90,6 +94,21 @@ bun run src/cli.ts readiness
 | `bun run src/cli.ts verify-template` | Generate test case template |
 | `bun run src/cli.ts deploy-guide --platform <p>` | Generate deployment guide |
 | `bun run src/cli.ts refresh` | Re-scan sources and merge new content into the refined corpus |
+
+
+### Supported corpus sources
+
+`ingest --source <src>` has built-in parsers for:
+
+| Source | Reads | Notes |
+|--------|-------|-------|
+| `cc` | Claude Code transcripts (`~/.claude/projects`) | Auto-detected |
+| `codex` | Codex CLI sessions (`~/.codex/sessions`) | |
+| `gemini` | Gemini CLI history (`~/.gemini/tmp`) | Old history only — Google retired the personal-account Gemini CLI on 2026-06-18 |
+| `memory` | Claude Code memory files (`~/.claude/projects/*/memory`) | Auto-detected |
+| `articles` | A folder of your own `.md` / `.txt` / `.html` writing | Off by default; set `sources.articles.path` and `enabled` in `config.json` (written by `init`) or `~/.config/digital-clone/config.json` |
+
+There is no built-in parser for Kimi, Antigravity, ChatGPT, or other tools. Export those conversations to `.md` / `.txt` / `.html` and bring them in with `import <path>`. `refresh` can additionally pull recent memories from RecallNest (see below).
 
 Set `CLONE_WORKSPACE` to pin the workspace to a fixed path shared between CLI and Skill sessions.
 
@@ -159,6 +178,8 @@ Set `CLONE_WORKSPACE` to pin the workspace to a fixed path shared between CLI an
 ## Author
 
 Built by **小试AI** ([@AliceLJY](https://github.com/AliceLJY)) for the WeChat public account **我的AI小木屋**.
+
+<img src="./assets/wechat_qr.jpg" width="200" alt="WeChat QR Code">
 
 ## Ecosystem
 
