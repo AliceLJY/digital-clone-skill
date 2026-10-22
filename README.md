@@ -15,6 +15,8 @@ A Claude Code Skill that turns conversation history and writings into a digital 
 
 </div>
 
+> **Status:** maintenance-only · last verified 2026-10. The code is stable and CI is green, but the author stopped running it day-to-day in June 2026; known issues on paths nobody uses are not actively fixed. Its live descendant is [etwin-bot](https://github.com/AliceLJY/etwin-bot).
+
 ---
 
 ## What It Does
@@ -149,7 +151,7 @@ Set `CLONE_WORKSPACE` to pin the workspace to a fixed path shared between CLI an
 | Source | Contribution |
 |--------|-------------|
 | Claude Code | Foundation, CLI, MCP server, parsers |
-| [RecallNest](https://github.com/AliceLJY/recallnest) | Parser architecture for CC/Codex/Kimi/Agy transcripts |
+| [RecallNest](https://github.com/AliceLJY/recallnest) | Transcript-parser architecture (this skill ships parsers for Claude Code, Codex, and Gemini CLI history only) |
 | [@MinLiBuilds](https://x.com/MinLiBuilds) | Naval clone tutorial — original inspiration |
 | alchaincyf/nuwa-skill | 6-angle research + three-pass verification |
 | LvPengfei1/PersonaVault | Evidence grading + capability boundaries |
@@ -166,12 +168,10 @@ Part of the **小试AI** open-source AI workflow:
 |---------|-------------|
 | [recallnest](https://github.com/AliceLJY/recallnest) | MCP memory workbench (LanceDB + Jina v5) |
 | content-publisher (private) | Image generation + layout + WeChat publishing |
-| [openclaw-tunnel](https://github.com/AliceLJY/openclaw-tunnel) | Docker ↔ host CLI bridge (/cc /codex) |
-| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Telegram bots for Claude, Codex, Agy, and Kimi |
+| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Self-hosted Telegram bridge that can drive Claude Code, Codex, Agy, or Kimi |
 | [claude-code-studio](https://github.com/AliceLJY/claude-code-studio) | Multi-session collaboration platform for Claude Code |
 | cc-empire *(private)* | Complete Claude Code workflow scaffold (rules + hooks + agents) |
 | [etwin-bot](https://github.com/AliceLJY/etwin-bot) | E-Twin Telegram bot — this skill's 1:1 instantiation as a runnable bot |
-| [trio-handoff](https://github.com/AliceLJY/trio-handoff) | Bidirectional handoff bundles for AI coding agents |
 
 ## License
 

@@ -15,6 +15,8 @@
 
 </div>
 
+> **状态：** 仅维护 · 2026-10 最后核验。代码稳定、CI 为绿，但作者自 2026 年 6 月起已不在日常使用；没人走的路径上的已知问题不主动修。它的现役后代是 [etwin-bot](https://github.com/AliceLJY/etwin-bot)。
+
 ---
 
 ## 它能做什么
@@ -149,7 +151,7 @@ bun run src/cli.ts readiness
 | 来源 | 贡献 |
 |------|------|
 | Claude Code | 基础架构、CLI、MCP、解析器 |
-| [RecallNest](https://github.com/AliceLJY/recallnest) | CC/Codex/Kimi/Agy 对话解析器架构 |
+| [RecallNest](https://github.com/AliceLJY/recallnest) | 对话记录解析器架构（本 skill 只带 Claude Code、Codex、Gemini CLI 历史文件三种解析器） |
 | [@MinLiBuilds](https://x.com/MinLiBuilds) | Naval 克隆教程 —— 最初的灵感来源 |
 | alchaincyf/nuwa-skill | 6 角度调研 + 三遍验证 |
 | LvPengfei1/PersonaVault | 证据分级 + 能力边界 |
@@ -166,12 +168,10 @@ bun run src/cli.ts readiness
 |------|------|
 | [recallnest](https://github.com/AliceLJY/recallnest) | MCP 记忆工作台（LanceDB + Jina v5） |
 | content-publisher（私有仓） | 配图 + 排版 + 公众号发布 |
-| [openclaw-tunnel](https://github.com/AliceLJY/openclaw-tunnel) | Docker ↔ 宿主机 CLI 桥（/cc /codex） |
-| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | Claude / Codex / Agy / Kimi 的 Telegram bot |
+| [telegram-ai-bridge](https://github.com/AliceLJY/telegram-ai-bridge) | 自托管 Telegram 桥，可驱动 Claude Code / Codex / Agy / Kimi |
 | [claude-code-studio](https://github.com/AliceLJY/claude-code-studio) | Claude Code 多会话协作平台 |
 | cc-empire *(private)* | 完整的 Claude Code 工作流脚手架（规则 + 钩子 + agent） |
 | [etwin-bot](https://github.com/AliceLJY/etwin-bot) | E-Twin Telegram bot —— 本 skill 的 1:1 实例化部署 |
-| [trio-handoff](https://github.com/AliceLJY/trio-handoff) | AI 编程 agent 之间的双向交接 bundle |
 
 ## 许可证
 

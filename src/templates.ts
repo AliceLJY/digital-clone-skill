@@ -81,13 +81,13 @@ export function generateDeployGuide(
 2. If pass rate >= 80% (6/7), the clone is ready
 3. Share the Gem link
 `,
-    ccbot: `# Deployment Guide: ${targetName} (CC Bot / OpenClaw)
+    ccbot: `# Deployment Guide: ${targetName} (Self-hosted Chat Bot)
 
 ## Step 1: Prepare System Prompt
 
 The \`system-prompt.md\` is ready to use as-is.
 
-- For OpenClaw: paste into the bot's system prompt config
+- For a self-hosted bot (e.g. a Telegram bot built on Claude Code): paste into the bot's system prompt config
 - Configure memory/RAG if your platform supports it
 
 ## Step 2: Attach Corpus
